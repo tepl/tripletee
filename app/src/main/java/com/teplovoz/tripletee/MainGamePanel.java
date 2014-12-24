@@ -23,9 +23,11 @@ public class MainGamePanel extends SurfaceView implements
     private Droid droid;
     private enum GameState { INIT, MENU, START, PLAY, FINISH, EXIT}
     private GameState state;
+    private int[][] board = new int[3][3];
     private float loading;
     private Paint paintButton, paintText;
     private RectF buttonStart, buttonExit, buttonMenu;
+    private float bw,bo,bs;  // board width, vertical offset and step
 
     // the fps to be displayed
     private String avgFps;
@@ -78,6 +80,9 @@ public class MainGamePanel extends SurfaceView implements
         buttonStart = new RectF(getWidth()*0.2f,getHeight()*0.2f,getWidth()*0.8f,getHeight()*0.4f);
         buttonExit  = new RectF(getWidth()*0.2f,getHeight()*0.6f,getWidth()*0.8f,getHeight()*0.8f);
         buttonMenu  = new RectF(0,getHeight()*0.8f,getWidth(),getHeight());
+        bw = getWidth();
+        bo = (buttonMenu.top - bw) / 2;
+        bs = bw / 3;
         thread.setRunning(true);
         thread.start();
     }
@@ -115,19 +120,30 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
             case PLAY:
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                switch(event.getAction()){
+                case MotionEvent.ACTION_DOWN:
                     droid.handleActionDown(mousex, mousey);
-                    if (event.getY() > buttonMenu.top) {
+                    if (mousey > buttonMenu.top) {
                         state = GameState.MENU;
                     }
-                } if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                if (droid.isTouched()) {
-                    droid.setX(mousex);
-                    droid.setY(mousey);
+                    else if(mousey > bo){
+                        int j = (int)( mousex     / bs);
+                        int i = (int)((mousey-bo) / bs);
+                        if(0 <= i && i <= 2 && 0 <= j && j <= 2) {
+                            if(board[i][j]==0) board[i][j] = 1;
+                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (droid.isTouched()) {
+                        droid.setX(mousex);
+                        droid.setY(mousey);
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (droid.isTouched()) droid.setTouched(false);
+                    break;
                 }
-            } if (event.getAction() == MotionEvent.ACTION_UP) {
-                if (droid.isTouched())droid.setTouched(false);
-            }
                 break;
         }
         return true;
@@ -136,7 +152,7 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch(state){
             case INIT:
-                canvas.drawColor(Color.rgb(0,0,Math.round(loading*255)));
+                canvas.drawColor(Color.rgb(0,0,(int)(loading*256)));
                 break;
             case MENU:
                 canvas.drawColor(Color.RED);
@@ -146,18 +162,20 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawText("Exit", buttonExit.left, buttonExit.bottom, paintText);
                 break;
             case START:
-                canvas.drawColor(Color.rgb(Math.round(loading*255),255,0));
+                canvas.drawColor(Color.rgb((int)(loading*256),255,0));
                 break;
             case PLAY:
                 canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
-                float w = getWidth();
-                float o = (buttonMenu.top-w)/2;
-                canvas.drawLine(w*1/3,o,w*1/3,o+w,paintText);
-                canvas.drawLine(w*2/3,o,w*2/3,o+w,paintText);
-                canvas.drawLine(0,w*1/3+o,w,w*1/3+o,paintText);
-                canvas.drawLine(0,w*2/3+o,w,w*2/3+o,paintText);
+                canvas.drawLine(bs,   bo,      bs,   bo+bw,   paintText);
+                canvas.drawLine(2*bs, bo,      2*bs, bo+bw,   paintText);
+                canvas.drawLine(0,    bs+bo,   bw,   bs+bo,   paintText);
+                canvas.drawLine(0,    2*bs+bo, bw,   2*bs+bo, paintText);
+                for (int i=0;i<3;i++) for (int j=0;j<3;j++)if(board[i][j]==1){
+                    canvas.drawLine(bs*j,bo+bs*i,bs*(j+1),bo+bs*(i+1),paintText);
+                    canvas.drawLine(bs*(j+1),bo+bs*i,bs*j,bo+bs*(i+1),paintText);
+                }
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
                 break;
