@@ -24,8 +24,8 @@ public class MainGamePanel extends SurfaceView implements
     private enum GameState { INIT, MENU, START, PLAY, FINISH, EXIT}
     private GameState state;
     private float loading;
-    private Paint paintButton,paintText;
-    private RectF buttonStart, buttonExit;
+    private Paint paintButton, paintText;
+    private RectF buttonStart, buttonExit, buttonMenu;
 
     // the fps to be displayed
     private String avgFps;
@@ -76,6 +76,7 @@ public class MainGamePanel extends SurfaceView implements
         Log.d("MYLOG", "MainGamePanel.surfaceCreated");
         buttonStart = new RectF(getWidth()*0.2f,getHeight()*0.2f,getWidth()*0.8f,getHeight()*0.4f);
         buttonExit  = new RectF(getWidth()*0.2f,getHeight()*0.6f,getWidth()*0.8f,getHeight()*0.8f);
+        buttonMenu  = new RectF(0,getHeight()*0.8f,getWidth(),getHeight());
         thread.setRunning(true);
         thread.start();
     }
@@ -115,7 +116,7 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     droid.handleActionDown(mousex, mousey);
-                    if (event.getY() > getHeight() - 50) {
+                    if (event.getY() > buttonMenu.top) {
                         state = GameState.MENU;
                     }
                 } if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -150,6 +151,8 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.BLACK);
                 elaine.draw(canvas);
                 droid.draw(canvas);
+                canvas.drawRect(buttonMenu, paintButton);
+                canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
                 break;
             case FINISH: case EXIT:
                 canvas.drawColor(Color.BLACK);
