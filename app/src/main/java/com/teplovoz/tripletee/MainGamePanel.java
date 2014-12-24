@@ -55,6 +55,7 @@ public class MainGamePanel extends SurfaceView implements
         paintText = new Paint();
         paintText.setColor(Color.BLACK);
         paintText.setTextSize(60);
+        paintText.setStrokeWidth(3);
 
         // create the game loop thread
         state = GameState.INIT;
@@ -148,9 +149,15 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.rgb(Math.round(loading*255),255,0));
                 break;
             case PLAY:
-                canvas.drawColor(Color.BLACK);
+                canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
+                float w = getWidth();
+                float o = (buttonMenu.top-w)/2;
+                canvas.drawLine(w*1/3,o,w*1/3,o+w,paintText);
+                canvas.drawLine(w*2/3,o,w*2/3,o+w,paintText);
+                canvas.drawLine(0,w*1/3+o,w,w*1/3+o,paintText);
+                canvas.drawLine(0,w*2/3+o,w,w*2/3+o,paintText);
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
                 break;
