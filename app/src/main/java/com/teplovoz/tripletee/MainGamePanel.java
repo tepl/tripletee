@@ -23,6 +23,7 @@ public class MainGamePanel extends SurfaceView implements
     private MainThread thread;
     private ElaineAnimated elaine;
     private Droid droid;
+    private boolean isReady;
     private enum GameState { INIT, MENU, START, PLAY, FINISH }
     private GameState state;
     private int[][] board = new int[3][3];
@@ -68,10 +69,10 @@ public class MainGamePanel extends SurfaceView implements
         // create the game loop thread
         state = GameState.INIT;
         loading = 0;
-        thread = new MainThread(getHolder(), this);
 
         // make the GamePanel focusable so it can handle events
         setFocusable(true);
+        isReady = false;
     }
 
     @Override
@@ -90,13 +91,14 @@ public class MainGamePanel extends SurfaceView implements
         buttonMenu  = new RectF(0,bh*0.8f,bw,bh);
         bo = (buttonMenu.top - bw) / 2;
         bs = bw / 3;
-        thread.setRunning(true);
-        thread.start();
+        isReady = true;
+        startPlaying();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("MYLOG", "MainGamePanel.surfaceDestoyed");
+        isReady = false;
         boolean retry = true;
         while (retry) {
             try {
@@ -106,6 +108,17 @@ public class MainGamePanel extends SurfaceView implements
                 // try again shutting down the thread
             }
         }
+    }
+
+    public void startPlaying(){
+        if(!isReady)return;
+        thread = new MainThread(getHolder(),this);
+        thread.setRunning(true);
+        thread.start();
+    }
+
+    public void stopPlaying(){
+        thread.setRunning(false);
     }
 
     public void InitGame(){
