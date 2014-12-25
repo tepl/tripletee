@@ -1,19 +1,14 @@
 package com.teplovoz.tripletee;
 
-import com.teplovoz.tripletee.model.ElaineAnimated;
-import com.teplovoz.tripletee.model.Droid;
-import com.teplovoz.tripletee.model.components.Speed;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.BoringLayout;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -25,15 +20,13 @@ public class MainGamePanel extends SurfaceView implements
         SurfaceHolder.Callback {
 
     private MainThread thread;
-    private ElaineAnimated elaine;
-    private Droid droid;
     private boolean isReady;
-    private enum GameState { INIT, MENU, START, PLAY, FINISH }
+    private enum GameState { INIT, MENU, PLAY, FINISH }
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle,paintAuthor;
-    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, finishRect;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor;
+    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
     private float sw,sh;        // screen width and height
     private float bw,bx,by,bs;  // board width, offsets and grid step
     private int player;         // player number, 1 or 2
@@ -48,18 +41,7 @@ public class MainGamePanel extends SurfaceView implements
     public MainGamePanel(Context context) {
         super(context);
         Log.d("MYLOG", "MainGamePanel.Initialization");
-        // adding the callback (this) to the surface holder to intercept events
         getHolder().addCallback(this);
-
-        // create Elaine and load bitmap
-        elaine = new ElaineAnimated(
-                BitmapFactory.decodeResource(getResources(), R.drawable.walk_elaine)
-                , 10, 50	// initial position
-                , 30, 47	// width and height of sprite
-                , 5, 5);	// FPS and number of frames in the animation
-
-        // create droid and load bitmap
-        droid = new Droid(BitmapFactory.decodeResource(getResources(), R.drawable.droid_1), 50, 50);
 
         // Graphic elements
         paintButton = new Paint();
@@ -89,11 +71,9 @@ public class MainGamePanel extends SurfaceView implements
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.ITALIC));
         textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
         textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
-        // create the game loop thread
+
         state = GameState.INIT;
         loading = 0;
-
-        // make the GamePanel focusable so it can handle events
         setFocusable(true);
         isReady = false;
     }
@@ -143,9 +123,7 @@ public class MainGamePanel extends SurfaceView implements
             try {
                 thread.join();
                 retry = false;
-            } catch (InterruptedException e) {
-                // try again shutting down the thread
-            }
+            } catch (InterruptedException e) {}
         }
     }
 
@@ -209,37 +187,24 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
             case PLAY:
-                switch(event.getAction()){
-                case MotionEvent.ACTION_DOWN:
-                    droid.handleActionDown(x, y);
-                    if (withinRect(x,y,buttonMenu)) {
+                if(event.getAction()==MotionEvent.ACTION_DOWN) {
+                    if (withinRect(x, y, buttonMenu)) {
                         state = GameState.MENU;
-                    }
-                    else if(withinRect(x,y,boardRect)){
-                        int j = (int)( (x - bx) / bs);
-                        int i = (int)( (y - by) / bs);
-                        if(0 <= i && i <= 2 && 0 <= j && j <= 2) {
-                            if(board[i][j]==0){
+                    } else if (withinRect(x, y, boardRect)) {
+                        int j = (int) ((x - bx) / bs);
+                        int i = (int) ((y - by) / bs);
+                        if (0 <= i && i <= 2 && 0 <= j && j <= 2) {
+                            if (board[i][j] == 0) {
                                 board[i][j] = player;
-                                if( board[i][(j+1)%3] == player && board[i][(j+2)%3] == player ||
-                                    board[(i+1)%3][j] == player && board[(i+2)%3][j] == player ||
-                                    i==j   && board[(i+1)%3][(j+1)%3] == player && board[(i+2)%3][(j+2)%3] == player ||
-                                    i==2-j && board[(i+2)%3][(j+1)%3] == player && board[(i+1)%3][(j+2)%3] == player )
+                                if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
+                                        board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
+                                        i == j && board[(i + 1) % 3][(j + 1) % 3] == player && board[(i + 2) % 3][(j + 2) % 3] == player ||
+                                        i == 2 - j && board[(i + 2) % 3][(j + 1) % 3] == player && board[(i + 1) % 3][(j + 2) % 3] == player)
                                     state = GameState.FINISH;
-                                else player = 2 - (player+1) % 2;
+                                else player = 2 - (player + 1) % 2;
                             }
                         }
                     }
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    if (droid.isTouched()) {
-                        droid.setX(x);
-                        droid.setY(y);
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (droid.isTouched()) droid.setTouched(false);
-                    break;
                 }
                 break;
             case FINISH:
@@ -264,14 +229,9 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawText("© 2014 Alexander Teplukhin",sw/2,sh*.85f,paintAuthor);
                 canvas.drawText("Version 0.5",sw/2,sh*.925f,paintAuthor);
                 break;
-            case START:
-                canvas.drawColor(Color.rgb((int)(loading*256),255,0));
-                break;
             case PLAY:
             case FINISH:
                 canvas.drawColor(Color.WHITE);
-                elaine.draw(canvas);
-                droid.draw(canvas);
                 canvas.drawLine(bx+1*bs, by, bx+bs,   by+bw,   paintGrid);
                 canvas.drawLine(bx+2*bs, by, bx+2*bs, by+bw,   paintGrid);
                 canvas.drawLine(bx, by+1*bs, bx+bw,   by+1*bs, paintGrid);
@@ -291,7 +251,7 @@ public class MainGamePanel extends SurfaceView implements
                 if(state==GameState.FINISH){
                     String label = "Player " + Integer.toString(player) + " won!";
                     float tw = paintText.measureText(label);
-                    finishRect = new RectF((sw-tw)/2-.1f*sw,sh*.4f,(sw+tw)/2+.1f*sw,sh*.6f);
+                    RectF finishRect = new RectF((sw-tw)/2-.1f*sw,sh*.4f,(sw+tw)/2+.1f*sw,sh*.6f);
                     canvas.drawRect(finishRect,paintFinish);
                     canvas.drawText(label, sw/2, sh/2+textd, paintText);
                 }
@@ -301,36 +261,12 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     public void update() {
-        switch (state) {
-            case INIT: case START:
-                loading += 0.01;
-                if(loading >= 1) {
-                    loading = 0;
-                    state = (state==GameState.INIT) ? GameState.MENU : GameState.PLAY;
-                }
-                break;
-            case MENU:
-                break;
-            case PLAY:
-                elaine.update(System.currentTimeMillis());
-                if (droid.getSpeed().getxDirection() == Speed.DIRECTION_RIGHT
-                        && droid.getX() + droid.getBitmap().getWidth() / 2 >= sw) {
-                    droid.getSpeed().toggleXDirection();
-                }
-                if (droid.getSpeed().getxDirection() == Speed.DIRECTION_LEFT
-                        && droid.getX() - droid.getBitmap().getWidth() / 2 <= 0) {
-                    droid.getSpeed().toggleXDirection();
-                }
-                if (droid.getSpeed().getyDirection() == Speed.DIRECTION_DOWN
-                        && droid.getY() + droid.getBitmap().getHeight() / 2 >= sh) {
-                    droid.getSpeed().toggleYDirection();
-                }
-                if (droid.getSpeed().getyDirection() == Speed.DIRECTION_UP
-                        && droid.getY() - droid.getBitmap().getHeight() / 2 <= 0) {
-                    droid.getSpeed().toggleYDirection();
-                }
-                droid.update();
-                break;
+        if(state==GameState.INIT) {
+            loading += 0.01;
+            if (loading >= 1) {
+                loading = 0;
+                state = GameState.MENU;
+            }
         }
     }
 
