@@ -15,6 +15,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.Arrays;
+
 public class MainGamePanel extends SurfaceView implements
         SurfaceHolder.Callback {
 
@@ -25,9 +27,10 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText;
+    private Paint paintButton, paintText, paintShape;
     private RectF buttonStart, buttonExit, buttonMenu;
     private float bw,bo,bs;  // board width, vertical offset and step
+    private int player;
 
     // the fps to be displayed
     private String avgFps;
@@ -57,7 +60,10 @@ public class MainGamePanel extends SurfaceView implements
         paintText = new Paint();
         paintText.setColor(Color.BLACK);
         paintText.setTextSize(60);
-        paintText.setStrokeWidth(3);
+        paintShape = new Paint();
+        paintShape.setColor(Color.BLACK);
+        paintShape.setStyle(Paint.Style.STROKE);
+        paintShape.setStrokeWidth(3);
 
         // create the game loop thread
         state = GameState.INIT;
@@ -101,6 +107,11 @@ public class MainGamePanel extends SurfaceView implements
         }
     }
 
+    public void InitGame(){
+        for (int[] line : board) Arrays.fill(line, 0);
+        player = 1;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int mousex = (int)event.getX();
@@ -111,6 +122,7 @@ public class MainGamePanel extends SurfaceView implements
                     if (buttonStart.left < mousex && mousex < buttonStart.right &&
                             buttonStart.top < mousey && mousey < buttonStart.bottom) {
                         state = GameState.PLAY;
+                        InitGame();
                     }
                     if (buttonExit.left < mousex && mousex < buttonExit.right &&
                             buttonExit.top < mousey && mousey < buttonExit.bottom) {
@@ -130,7 +142,10 @@ public class MainGamePanel extends SurfaceView implements
                         int j = (int)( mousex     / bs);
                         int i = (int)((mousey-bo) / bs);
                         if(0 <= i && i <= 2 && 0 <= j && j <= 2) {
-                            if(board[i][j]==0) board[i][j] = 1;
+                            if(board[i][j]==0){
+                                board[i][j] = player;
+                                player = 2 - (player+1) % 2;
+                            }
                         }
                     }
                     break;
@@ -168,16 +183,22 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
-                canvas.drawLine(bs,   bo,      bs,   bo+bw,   paintText);
-                canvas.drawLine(2*bs, bo,      2*bs, bo+bw,   paintText);
-                canvas.drawLine(0,    bs+bo,   bw,   bs+bo,   paintText);
-                canvas.drawLine(0,    2*bs+bo, bw,   2*bs+bo, paintText);
-                for (int i=0;i<3;i++) for (int j=0;j<3;j++)if(board[i][j]==1){
-                    canvas.drawLine(bs*j,bo+bs*i,bs*(j+1),bo+bs*(i+1),paintText);
-                    canvas.drawLine(bs*(j+1),bo+bs*i,bs*j,bo+bs*(i+1),paintText);
+                canvas.drawLine(bs,   bo,      bs,   bo+bw,   paintShape);
+                canvas.drawLine(2*bs, bo,      2*bs, bo+bw,   paintShape);
+                canvas.drawLine(0,    bs+bo,   bw,   bs+bo,   paintShape);
+                canvas.drawLine(0,    2*bs+bo, bw,   2*bs+bo, paintShape);
+                for (int i=0;i<3;i++) for (int j=0;j<3;j++){
+                    if(board[i][j]==1){
+                        canvas.drawLine(bs*j,bo+bs*i,bs*(j+1),bo+bs*(i+1),paintShape);
+                        canvas.drawLine(bs*(j+1),bo+bs*i,bs*j,bo+bs*(i+1),paintShape);
+                    }
+                    else if(board[i][j]==2){
+                        canvas.drawCircle(bs*(j+.5f),bo+bs*(i+.5f),bs/2,paintShape);
+                    }
                 }
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
+                canvas.drawText("Player " + Integer.toString(player), 0, paintText.getTextSize(), paintText);
                 break;
             case FINISH: case EXIT:
                 canvas.drawColor(Color.BLACK);
