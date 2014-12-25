@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -137,6 +138,28 @@ public class MainGamePanel extends SurfaceView implements
 
     public void stopPlaying(){
         thread.setRunning(false);
+    }
+
+    static final String SAVE_STATE  = "state";
+    static final String SAVE_PLAYER = "player";
+    static final String SAVE_ROW0 = "row0";
+    static final String SAVE_ROW1 = "row1";
+    static final String SAVE_ROW2 = "row2";
+
+    public void saveState(Bundle savedInstanceState) {
+        savedInstanceState.putSerializable(SAVE_STATE, state);
+        savedInstanceState.putInt(SAVE_PLAYER, player);
+        savedInstanceState.putIntArray(SAVE_ROW0, board[0]);
+        savedInstanceState.putIntArray(SAVE_ROW1, board[1]);
+        savedInstanceState.putIntArray(SAVE_ROW2, board[2]);
+    }
+
+    public void restoreState(Bundle savedInstanceState) {
+        state = (GameState)savedInstanceState.getSerializable(SAVE_STATE);
+        player = savedInstanceState.getInt(SAVE_PLAYER);
+        board[0] = savedInstanceState.getIntArray(SAVE_ROW0);
+        board[1] = savedInstanceState.getIntArray(SAVE_ROW1);
+        board[2] = savedInstanceState.getIntArray(SAVE_ROW2);
     }
 
     public void InitGame(){

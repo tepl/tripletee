@@ -21,6 +21,18 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        panel.saveState(savedInstanceState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        panel.restoreState(savedInstanceState);
+    }
+
+    @Override
     protected void onRestart() {
         super.onRestart();
         Log.d("MYLOG","MainActivity.OnRestart");
