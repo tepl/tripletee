@@ -30,11 +30,11 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintShape;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect,labelRect;
     private float sw,sh;        // screen width and height
     private float bw,bx,by,bs;  // board width, offsets and grid step
-    private int player;         // player numeber, 1 or 2
+    private int player;         // player number, 1 or 2
     private int textd;         // distance from the baseline to the center
 
     // the fps to be displayed
@@ -67,10 +67,13 @@ public class MainGamePanel extends SurfaceView implements
         paintText.setTextSize(60);
         paintText.setTextAlign(Paint.Align.CENTER);
         textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
-        paintShape = new Paint();
-        paintShape.setColor(Color.BLACK);
-        paintShape.setStyle(Paint.Style.STROKE);
-        paintShape.setStrokeWidth(3);
+        paintGrid = new Paint();
+        paintGrid.setColor(Color.BLACK);
+        paintCross = new Paint();
+        paintCross.setColor(Color.RED);
+        paintNought = new Paint();
+        paintNought.setColor(Color.BLUE);
+        paintNought.setStyle(Paint.Style.STROKE);
 
         // create the game loop thread
         state = GameState.INIT;
@@ -110,6 +113,9 @@ public class MainGamePanel extends SurfaceView implements
         }
         bs = bw / 3;
         boardRect = new RectF(bx, by, bx + bw, by + bw);
+        paintGrid.setStrokeWidth(bw/50);
+        paintCross.setStrokeWidth(bw/20);
+        paintNought.setStrokeWidth(bw/20);
         isReady = true;
         startPlaying();
     }
@@ -249,17 +255,17 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
-                canvas.drawLine(bx+1*bs, by, bx+bs,   by+bw,   paintShape);
-                canvas.drawLine(bx+2*bs, by, bx+2*bs, by+bw,   paintShape);
-                canvas.drawLine(bx, by+1*bs, bx+bw,   by+1*bs, paintShape);
-                canvas.drawLine(bx, by+2*bs, bx+bw,   by+2*bs, paintShape);
+                canvas.drawLine(bx+1*bs, by, bx+bs,   by+bw,   paintGrid);
+                canvas.drawLine(bx+2*bs, by, bx+2*bs, by+bw,   paintGrid);
+                canvas.drawLine(bx, by+1*bs, bx+bw,   by+1*bs, paintGrid);
+                canvas.drawLine(bx, by+2*bs, bx+bw,   by+2*bs, paintGrid);
                 for (int i=0;i<3;i++) for (int j=0;j<3;j++){
                     if(board[i][j]==1){
-                        canvas.drawLine(bx+bs*j,by+bs*i,bx+bs*(j+1),by+bs*(i+1),paintShape);
-                        canvas.drawLine(bx+bs*(j+1),by+bs*i,bx+bs*j,by+bs*(i+1),paintShape);
+                        canvas.drawLine(bx+bs*(j+.2f),by+bs*(i+.2f),bx+bs*(j+.8f),by+bs*(i+.8f),paintCross);
+                        canvas.drawLine(bx+bs*(j+.8f),by+bs*(i+.2f),bx+bs*(j+.2f),by+bs*(i+.8f),paintCross);
                     }
                     else if(board[i][j]==2){
-                        canvas.drawCircle(bx+bs*(j+.5f),by+bs*(i+.5f),bs/2,paintShape);
+                        canvas.drawCircle(bx+bs*(j+.5f),by+bs*(i+.5f),bs*.3f,paintNought);
                     }
                 }
                 canvas.drawRect(buttonMenu, paintButton);
