@@ -5,6 +5,7 @@ import com.teplovoz.tripletee.model.Droid;
 import com.teplovoz.tripletee.model.components.Speed;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -29,9 +30,11 @@ public class MainGamePanel extends SurfaceView implements
     private int[][] board = new int[3][3];
     private float loading;
     private Paint paintButton, paintText, paintShape;
-    private RectF buttonStart, buttonExit, buttonMenu;
-    private float bw,bh,bo,bs;  // board width, height, vertical offset and step
-    private int player;
+    private RectF buttonStart, buttonExit, buttonMenu, boardRect,labelRect;
+    private float sw,sh;        // screen width and height
+    private float bw,bx,by,bs;  // board width, offsets and grid step
+    private int player;         // player numeber, 1 or 2
+    private int textd;         // distance from the baseline to the center
 
     // the fps to be displayed
     private String avgFps;
@@ -61,6 +64,8 @@ public class MainGamePanel extends SurfaceView implements
         paintText = new Paint();
         paintText.setColor(Color.BLACK);
         paintText.setTextSize(60);
+        paintText.setTextAlign(Paint.Align.CENTER);
+        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
         paintShape = new Paint();
         paintShape.setColor(Color.BLACK);
         paintShape.setStyle(Paint.Style.STROKE);
@@ -84,13 +89,26 @@ public class MainGamePanel extends SurfaceView implements
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d("MYLOG", "MainGamePanel.surfaceCreated");
-        bw = getWidth();
-        bh = getHeight();
-        buttonStart = new RectF(bw*0.2f,bh*0.2f,bw*0.8f,bh*0.4f);
-        buttonExit  = new RectF(bw*0.2f,bh*0.6f,bw*0.8f,bh*0.8f);
-        buttonMenu  = new RectF(0,bh*0.8f,bw,bh);
-        bo = (buttonMenu.top - bw) / 2;
+        sw = getWidth();
+        sh = getHeight();
+        buttonStart = new RectF(sw*0.2f,sh*0.2f,sw*0.8f,sh*0.4f);
+        buttonExit  = new RectF(sw*0.2f,sh*0.6f,sw*0.8f,sh*0.8f);
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || sw == sh) {
+            bw = sw;
+            bx = 0;
+            by = (sh - bw) / 2;
+            labelRect =  new RectF(0, 0, sw, by);
+            buttonMenu = new RectF(0, by+bw, sw, sh);
+        }
+        else{
+            bw = sh;
+            bx = sw - bw;
+            by = 0;
+            labelRect =  new RectF(0, 0, bx, sh / 2);
+            buttonMenu = new RectF(0, sh / 2, bx, sh);
+        }
         bs = bw / 3;
+        boardRect = new RectF(bx, by, bx + bw, by + bw);
         isReady = true;
         startPlaying();
     }
@@ -126,20 +144,22 @@ public class MainGamePanel extends SurfaceView implements
         player = 1;
     }
 
+    private boolean withinRect(int x, int y, RectF r){
+        return (r.left <= x && x <= r.right && r.top <= y && y <= r.bottom);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int mousex = (int)event.getX();
-        int mousey = (int)event.getY();
+        int x = (int)event.getX();
+        int y = (int)event.getY();
         switch(state){
             case MENU:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (buttonStart.left < mousex && mousex < buttonStart.right &&
-                            buttonStart.top < mousey && mousey < buttonStart.bottom) {
+                    if (withinRect(x,y,buttonStart)) {
                         state = GameState.PLAY;
                         InitGame();
                     }
-                    if (buttonExit.left < mousex && mousex < buttonExit.right &&
-                            buttonExit.top < mousey && mousey < buttonExit.bottom) {
+                    if (withinRect(x,y,buttonExit)) {
                         thread.setRunning(false);
                         ((Activity)getContext()).finish();
                     }
@@ -148,13 +168,13 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
                 switch(event.getAction()){
                 case MotionEvent.ACTION_DOWN:
-                    droid.handleActionDown(mousex, mousey);
-                    if (mousey > buttonMenu.top) {
+                    droid.handleActionDown(x, y);
+                    if (withinRect(x,y,buttonMenu)) {
                         state = GameState.MENU;
                     }
-                    else if(mousey > bo){
-                        int j = (int)( mousex     / bs);
-                        int i = (int)((mousey-bo) / bs);
+                    else if(withinRect(x,y,boardRect)){
+                        int j = (int)( (x - bx) / bs);
+                        int i = (int)( (y - by) / bs);
                         if(0 <= i && i <= 2 && 0 <= j && j <= 2) {
                             if(board[i][j]==0){
                                 board[i][j] = player;
@@ -170,8 +190,8 @@ public class MainGamePanel extends SurfaceView implements
                     break;
                 case MotionEvent.ACTION_MOVE:
                     if (droid.isTouched()) {
-                        droid.setX(mousex);
-                        droid.setY(mousey);
+                        droid.setX(x);
+                        droid.setY(y);
                     }
                     break;
                 case MotionEvent.ACTION_UP:
@@ -180,7 +200,7 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
             case FINISH:
-                if (event.getAction() == MotionEvent.ACTION_DOWN && mousey > buttonMenu.top) state = GameState.MENU;
+                if (event.getAction() == MotionEvent.ACTION_DOWN && withinRect(x,y,buttonMenu)) state = GameState.MENU;
                 break;
         }
         return true;
@@ -194,9 +214,9 @@ public class MainGamePanel extends SurfaceView implements
             case MENU:
                 canvas.drawColor(Color.RED);
                 canvas.drawRect(buttonStart, paintButton);
-                canvas.drawText("Start", buttonStart.left, buttonStart.bottom, paintText);
+                canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY()+textd, paintText);
                 canvas.drawRect(buttonExit, paintButton);
-                canvas.drawText("Exit", buttonExit.left, buttonExit.bottom, paintText);
+                canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY()+textd, paintText);
                 break;
             case START:
                 canvas.drawColor(Color.rgb((int)(loading*256),255,0));
@@ -206,24 +226,24 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
-                canvas.drawLine(bs,   bo,      bs,   bo+bw,   paintShape);
-                canvas.drawLine(2*bs, bo,      2*bs, bo+bw,   paintShape);
-                canvas.drawLine(0,    bs+bo,   bw,   bs+bo,   paintShape);
-                canvas.drawLine(0,    2*bs+bo, bw,   2*bs+bo, paintShape);
+                canvas.drawLine(bx+1*bs, by, bx+bs,   by+bw,   paintShape);
+                canvas.drawLine(bx+2*bs, by, bx+2*bs, by+bw,   paintShape);
+                canvas.drawLine(bx, by+1*bs, bx+bw,   by+1*bs, paintShape);
+                canvas.drawLine(bx, by+2*bs, bx+bw,   by+2*bs, paintShape);
                 for (int i=0;i<3;i++) for (int j=0;j<3;j++){
                     if(board[i][j]==1){
-                        canvas.drawLine(bs*j,bo+bs*i,bs*(j+1),bo+bs*(i+1),paintShape);
-                        canvas.drawLine(bs*(j+1),bo+bs*i,bs*j,bo+bs*(i+1),paintShape);
+                        canvas.drawLine(bx+bs*j,by+bs*i,bx+bs*(j+1),by+bs*(i+1),paintShape);
+                        canvas.drawLine(bx+bs*(j+1),by+bs*i,bx+bs*j,by+bs*(i+1),paintShape);
                     }
                     else if(board[i][j]==2){
-                        canvas.drawCircle(bs*(j+.5f),bo+bs*(i+.5f),bs/2,paintShape);
+                        canvas.drawCircle(bx+bs*(j+.5f),by+bs*(i+.5f),bs/2,paintShape);
                     }
                 }
                 canvas.drawRect(buttonMenu, paintButton);
-                canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
-                canvas.drawText("Player " + Integer.toString(player), 0, paintText.getTextSize(), paintText);
+                canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY()+textd, paintText);
+                canvas.drawText("Player " + Integer.toString(player), labelRect.centerX(), labelRect.centerY()+textd, paintText);
                 if(state==GameState.FINISH){
-                    canvas.drawText("Player " + Integer.toString(player) + " won!", 0, bh/2, paintText);
+                    canvas.drawText("Player " + Integer.toString(player) + " won!", sw/2, sh/2+textd, paintText);
                 }
                 break;
         }
@@ -244,7 +264,7 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
                 elaine.update(System.currentTimeMillis());
                 if (droid.getSpeed().getxDirection() == Speed.DIRECTION_RIGHT
-                        && droid.getX() + droid.getBitmap().getWidth() / 2 >= bw) {
+                        && droid.getX() + droid.getBitmap().getWidth() / 2 >= sw) {
                     droid.getSpeed().toggleXDirection();
                 }
                 if (droid.getSpeed().getxDirection() == Speed.DIRECTION_LEFT
@@ -252,7 +272,7 @@ public class MainGamePanel extends SurfaceView implements
                     droid.getSpeed().toggleXDirection();
                 }
                 if (droid.getSpeed().getyDirection() == Speed.DIRECTION_DOWN
-                        && droid.getY() + droid.getBitmap().getHeight() / 2 >= bh) {
+                        && droid.getY() + droid.getBitmap().getHeight() / 2 >= sh) {
                     droid.getSpeed().toggleYDirection();
                 }
                 if (droid.getSpeed().getyDirection() == Speed.DIRECTION_UP
@@ -267,8 +287,8 @@ public class MainGamePanel extends SurfaceView implements
     private void displayFps(Canvas canvas, String fps) {
         if (canvas != null && fps != null) {
             Paint paint = new Paint();
-            paint.setARGB(255, 255, 255, 255);
-            canvas.drawText(fps, bw - 50, 20, paint);
+            paint.setColor(Color.BLACK);
+            canvas.drawText(fps, sw - 50, 20, paint);
         }
     }
 
