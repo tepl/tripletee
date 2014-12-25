@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -40,7 +39,6 @@ public class MainGamePanel extends SurfaceView implements
 
     public MainGamePanel(Context context) {
         super(context);
-        Log.d("MYLOG", "MainGamePanel.Initialization");
         getHolder().addCallback(this);
 
         // Graphic elements
@@ -79,14 +77,10 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                               int height) {
-        Log.d("MYLOG", "MainGamePanel.surfaceChange");
-    }
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.d("MYLOG", "MainGamePanel.surfaceCreated");
         sw = getWidth();
         sh = getHeight();
         buttonStart = new RectF(sw*.2f,sh*.25f,sw*.8f,sh*.45f);
@@ -116,7 +110,6 @@ public class MainGamePanel extends SurfaceView implements
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.d("MYLOG", "MainGamePanel.surfaceDestoyed");
         isReady = false;
         boolean retry = true;
         while (retry) {

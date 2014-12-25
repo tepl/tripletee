@@ -1,7 +1,6 @@
 package com.teplovoz.tripletee;
 
 import java.text.DecimalFormat;
-
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
