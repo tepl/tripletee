@@ -30,8 +30,8 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought;
-    private RectF buttonStart, buttonExit, buttonMenu, boardRect,labelRect;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish;
+    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, finishRect;
     private float sw,sh;        // screen width and height
     private float bw,bx,by,bs;  // board width, offsets and grid step
     private int player;         // player number, 1 or 2
@@ -74,6 +74,8 @@ public class MainGamePanel extends SurfaceView implements
         paintNought = new Paint();
         paintNought.setColor(Color.BLUE);
         paintNought.setStyle(Paint.Style.STROKE);
+        paintFinish = new Paint();
+        paintFinish.setColor(Color.CYAN);
 
         // create the game loop thread
         state = GameState.INIT;
@@ -229,7 +231,7 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
             case FINISH:
-                if (event.getAction() == MotionEvent.ACTION_DOWN && withinRect(x,y,buttonMenu)) state = GameState.MENU;
+                if (event.getAction() == MotionEvent.ACTION_DOWN) state = GameState.MENU;
                 break;
         }
         return true;
@@ -272,7 +274,11 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY()+textd, paintText);
                 canvas.drawText("Player " + Integer.toString(player), labelRect.centerX(), labelRect.centerY()+textd, paintText);
                 if(state==GameState.FINISH){
-                    canvas.drawText("Player " + Integer.toString(player) + " won!", sw/2, sh/2+textd, paintText);
+                    String label = "Player " + Integer.toString(player) + " won!";
+                    float tw = paintText.measureText(label);
+                    finishRect = new RectF((sw-tw)/2-.1f*sw,sh*.4f,(sw+tw)/2+.1f*sw,sh*.6f);
+                    canvas.drawRect(finishRect,paintFinish);
+                    canvas.drawText(label, sw/2, sh/2+textd, paintText);
                 }
                 break;
         }
