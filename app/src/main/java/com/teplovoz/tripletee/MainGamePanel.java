@@ -23,13 +23,13 @@ public class MainGamePanel extends SurfaceView implements
     private MainThread thread;
     private ElaineAnimated elaine;
     private Droid droid;
-    private enum GameState { INIT, MENU, START, PLAY, FINISH, EXIT}
+    private enum GameState { INIT, MENU, START, PLAY, FINISH }
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
     private Paint paintButton, paintText, paintShape;
     private RectF buttonStart, buttonExit, buttonMenu;
-    private float bw,bo,bs;  // board width, vertical offset and step
+    private float bw,bh,bo,bs;  // board width, height, vertical offset and step
     private int player;
 
     // the fps to be displayed
@@ -83,10 +83,11 @@ public class MainGamePanel extends SurfaceView implements
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d("MYLOG", "MainGamePanel.surfaceCreated");
-        buttonStart = new RectF(getWidth()*0.2f,getHeight()*0.2f,getWidth()*0.8f,getHeight()*0.4f);
-        buttonExit  = new RectF(getWidth()*0.2f,getHeight()*0.6f,getWidth()*0.8f,getHeight()*0.8f);
-        buttonMenu  = new RectF(0,getHeight()*0.8f,getWidth(),getHeight());
         bw = getWidth();
+        bh = getHeight();
+        buttonStart = new RectF(bw*0.2f,bh*0.2f,bw*0.8f,bh*0.4f);
+        buttonExit  = new RectF(bw*0.2f,bh*0.6f,bw*0.8f,bh*0.8f);
+        buttonMenu  = new RectF(0,bh*0.8f,bw,bh);
         bo = (buttonMenu.top - bw) / 2;
         bs = bw / 3;
         thread.setRunning(true);
@@ -144,7 +145,12 @@ public class MainGamePanel extends SurfaceView implements
                         if(0 <= i && i <= 2 && 0 <= j && j <= 2) {
                             if(board[i][j]==0){
                                 board[i][j] = player;
-                                player = 2 - (player+1) % 2;
+                                if( board[i][(j+1)%3] == player && board[i][(j+2)%3] == player ||
+                                    board[(i+1)%3][j] == player && board[(i+2)%3][j] == player ||
+                                    i==j   && board[(i+1)%3][(j+1)%3] == player && board[(i+2)%3][(j+2)%3] == player ||
+                                    i==2-j && board[(i+2)%3][(j+1)%3] == player && board[(i+1)%3][(j+2)%3] == player )
+                                    state = GameState.FINISH;
+                                else player = 2 - (player+1) % 2;
                             }
                         }
                     }
@@ -160,6 +166,9 @@ public class MainGamePanel extends SurfaceView implements
                     break;
                 }
                 break;
+            case FINISH:
+                if (event.getAction() == MotionEvent.ACTION_DOWN && mousey > buttonMenu.top) state = GameState.MENU;
+                break;
         }
         return true;
     }
@@ -167,7 +176,7 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch(state){
             case INIT:
-                canvas.drawColor(Color.rgb(0,0,(int)(loading*256)));
+                canvas.drawColor(Color.rgb((int)(loading*256),0,0));
                 break;
             case MENU:
                 canvas.drawColor(Color.RED);
@@ -180,6 +189,7 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.rgb((int)(loading*256),255,0));
                 break;
             case PLAY:
+            case FINISH:
                 canvas.drawColor(Color.WHITE);
                 elaine.draw(canvas);
                 droid.draw(canvas);
@@ -199,9 +209,9 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.left, buttonMenu.bottom, paintText);
                 canvas.drawText("Player " + Integer.toString(player), 0, paintText.getTextSize(), paintText);
-                break;
-            case FINISH: case EXIT:
-                canvas.drawColor(Color.BLACK);
+                if(state==GameState.FINISH){
+                    canvas.drawText("Player " + Integer.toString(player) + " won!", 0, bh/2, paintText);
+                }
                 break;
         }
         displayFps(canvas, avgFps);
@@ -221,7 +231,7 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
                 elaine.update(System.currentTimeMillis());
                 if (droid.getSpeed().getxDirection() == Speed.DIRECTION_RIGHT
-                        && droid.getX() + droid.getBitmap().getWidth() / 2 >= getWidth()) {
+                        && droid.getX() + droid.getBitmap().getWidth() / 2 >= bw) {
                     droid.getSpeed().toggleXDirection();
                 }
                 if (droid.getSpeed().getxDirection() == Speed.DIRECTION_LEFT
@@ -229,7 +239,7 @@ public class MainGamePanel extends SurfaceView implements
                     droid.getSpeed().toggleXDirection();
                 }
                 if (droid.getSpeed().getyDirection() == Speed.DIRECTION_DOWN
-                        && droid.getY() + droid.getBitmap().getHeight() / 2 >= getHeight()) {
+                        && droid.getY() + droid.getBitmap().getHeight() / 2 >= bh) {
                     droid.getSpeed().toggleYDirection();
                 }
                 if (droid.getSpeed().getyDirection() == Speed.DIRECTION_UP
@@ -245,7 +255,7 @@ public class MainGamePanel extends SurfaceView implements
         if (canvas != null && fps != null) {
             Paint paint = new Paint();
             paint.setARGB(255, 255, 255, 255);
-            canvas.drawText(fps, this.getWidth() - 50, 20, paint);
+            canvas.drawText(fps, bw - 50, 20, paint);
         }
     }
 
