@@ -11,7 +11,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.BoringLayout;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -30,12 +32,12 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle,paintAuthor;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, finishRect;
     private float sw,sh;        // screen width and height
     private float bw,bx,by,bs;  // board width, offsets and grid step
     private int player;         // player number, 1 or 2
-    private int textd;         // distance from the baseline to the center
+    private int textd,textt;    // distance from the baseline to the center
 
     // the fps to be displayed
     private String avgFps;
@@ -66,7 +68,6 @@ public class MainGamePanel extends SurfaceView implements
         paintText.setColor(Color.BLACK);
         paintText.setTextSize(60);
         paintText.setTextAlign(Paint.Align.CENTER);
-        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
         paintGrid = new Paint();
         paintGrid.setColor(Color.BLACK);
         paintCross = new Paint();
@@ -76,7 +77,18 @@ public class MainGamePanel extends SurfaceView implements
         paintNought.setStyle(Paint.Style.STROKE);
         paintFinish = new Paint();
         paintFinish.setColor(Color.CYAN);
-
+        paintTitle = new Paint();
+        paintTitle.setColor(Color.BLACK);
+        paintTitle.setTextSize(80);
+        paintTitle.setTextAlign(Paint.Align.CENTER);
+        paintTitle.setTypeface(Typeface.create(Typeface.SANS_SERIF,Typeface.BOLD));
+        paintAuthor = new Paint();
+        paintAuthor.setColor(Color.BLACK);
+        paintAuthor.setTextSize(20);
+        paintAuthor.setTextAlign(Paint.Align.CENTER);
+        paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.ITALIC));
+        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
+        textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
         // create the game loop thread
         state = GameState.INIT;
         loading = 0;
@@ -97,8 +109,8 @@ public class MainGamePanel extends SurfaceView implements
         Log.d("MYLOG", "MainGamePanel.surfaceCreated");
         sw = getWidth();
         sh = getHeight();
-        buttonStart = new RectF(sw*0.2f,sh*0.2f,sw*0.8f,sh*0.4f);
-        buttonExit  = new RectF(sw*0.2f,sh*0.6f,sw*0.8f,sh*0.8f);
+        buttonStart = new RectF(sw*.2f,sh*.25f,sw*.8f,sh*.45f);
+        buttonExit  = new RectF(sw*.2f,sh*.55f,sw*.8f,sh*.75f);
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || sw == sh) {
             bw = sw;
             bx = 0;
@@ -244,10 +256,13 @@ public class MainGamePanel extends SurfaceView implements
                 break;
             case MENU:
                 canvas.drawColor(Color.RED);
+                canvas.drawText("Triple Tee",sw/2,sh*.125f+textt,paintTitle);
                 canvas.drawRect(buttonStart, paintButton);
                 canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY()+textd, paintText);
                 canvas.drawRect(buttonExit, paintButton);
                 canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY()+textd, paintText);
+                canvas.drawText("© 2014 Alexander Teplukhin",sw/2,sh*.85f,paintAuthor);
+                canvas.drawText("Version 0.5",sw/2,sh*.925f,paintAuthor);
                 break;
             case START:
                 canvas.drawColor(Color.rgb((int)(loading*256),255,0));
