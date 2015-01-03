@@ -26,7 +26,7 @@ public class MainGamePanel extends SurfaceView implements
     private float loading;
     private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor, paintFPS;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
-    private float sw,sh,scale;  // screen width, height and fontFactor
+    private float sw,sh,fontFactor;  // screen width, height and fontFactor
     private float bw,bx,by,bs;       // board width, offsets and grid step
     private int player;              // player number, 1 or 2
     private int textd,textt;         // distance from the baseline to the center
@@ -101,11 +101,11 @@ public class MainGamePanel extends SurfaceView implements
         paintGrid.setStrokeWidth(bw/50);
         paintCross.setStrokeWidth(bw/20);
         paintNought.setStrokeWidth(bw/20);
-        scale = Math.min(sw,sh)/480;
-        paintText.setTextSize(60*scale);
-        paintTitle.setTextSize(80*scale);
-        paintAuthor.setTextSize(20 * scale);
-        paintFPS.setTextSize(16*scale);
+        fontFactor = Math.min(sw,sh)/480;
+        paintText.setTextSize(60*fontFactor);
+        paintTitle.setTextSize(80*fontFactor);
+        paintAuthor.setTextSize(20 * fontFactor);
+        paintFPS.setTextSize(16*fontFactor);
         textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
         textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
         isReady = true;
@@ -244,9 +244,11 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY()+textd, paintText);
-                canvas.drawText("Player " + Integer.toString(player), labelRect.centerX(), labelRect.centerY()+textd, paintText);
+                String label = "Player " + Integer.toString(player);
+                if(bx>0 && paintText.measureText(label)>bx)label = "Plr " + Integer.toString(player);
+                canvas.drawText(label, labelRect.centerX(), labelRect.centerY()+textd, paintText);
                 if(state==GameState.FINISH){
-                    String label = "Player " + Integer.toString(player) + " won!";
+                    label = "Player " + Integer.toString(player) + " won!";
                     float tw = paintText.measureText(label);
                     RectF finishRect = new RectF((sw-tw)/2-.1f*sw,sh*.4f,(sw+tw)/2+.1f*sw,sh*.6f);
                     canvas.drawRect(finishRect,paintFinish);
@@ -254,7 +256,7 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
         }
-        if(avgFps!=null)canvas.drawText(avgFps, sw - 60*scale, 20*scale, paintFPS);
+        if(avgFps!=null)canvas.drawText(avgFps, sw - 60*fontFactor, 20*fontFactor, paintFPS);
     }
 
     public void update() {
