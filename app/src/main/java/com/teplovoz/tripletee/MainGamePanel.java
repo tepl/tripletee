@@ -239,7 +239,7 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawRect(buttonExit, paintButton);
                 canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY() + textd, paintText);
                 canvas.drawText("© 2014 Alexander Teplukhin", sw / 2, sh * .85f, paintAuthor);
-                canvas.drawText("Version 1.0", sw / 2, sh * .925f, paintAuthor);
+                canvas.drawText("Version 1.1", sw / 2, sh * .925f, paintAuthor);
                 break;
             case PLAY:
             case FINISH:
