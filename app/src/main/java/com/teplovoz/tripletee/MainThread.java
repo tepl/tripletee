@@ -1,6 +1,5 @@
 package com.teplovoz.tripletee;
 
-import java.text.DecimalFormat;
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
@@ -14,7 +13,6 @@ public class MainThread extends Thread {
     private final static int	FRAME_PERIOD = 1000 / MAX_FPS;
 
     /* Stuff for stats */
-    private DecimalFormat df = new DecimalFormat("0.##");  // 2 dp
     // we'll be reading the stats every second
     private final static int 	STAT_INTERVAL = 1000; //ms
     // the average will be calculated by storing
@@ -171,7 +169,7 @@ public class MainThread extends Thread {
             statusIntervalTimer = System.currentTimeMillis();
             lastStatusStore = statusIntervalTimer;
 //			Log.d(TAG, "Average FPS:" + df.format(averageFps));
-            gamePanel.setAvgFps("FPS: " + df.format(averageFps));
+            gamePanel.setAvgFps("FPS: " + Math.round(averageFps));
         }
     }
 

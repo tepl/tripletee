@@ -24,12 +24,12 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor, paintFPS;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
-    private float sw,sh;        // screen width and height
-    private float bw,bx,by,bs;  // board width, offsets and grid step
-    private int player;         // player number, 1 or 2
-    private int textd,textt;    // distance from the baseline to the center
+    private float sw,sh,scale;  // screen width, height and fontFactor
+    private float bw,bx,by,bs;       // board width, offsets and grid step
+    private int player;              // player number, 1 or 2
+    private int textd,textt;         // distance from the baseline to the center
 
     // the fps to be displayed
     private String avgFps;
@@ -46,7 +46,6 @@ public class MainGamePanel extends SurfaceView implements
         paintButton.setColor(Color.GREEN);
         paintText = new Paint();
         paintText.setColor(Color.BLACK);
-        paintText.setTextSize(60);
         paintText.setTextAlign(Paint.Align.CENTER);
         paintGrid = new Paint();
         paintGrid.setColor(Color.BLACK);
@@ -59,16 +58,14 @@ public class MainGamePanel extends SurfaceView implements
         paintFinish.setColor(Color.CYAN);
         paintTitle = new Paint();
         paintTitle.setColor(Color.BLACK);
-        paintTitle.setTextSize(80);
         paintTitle.setTextAlign(Paint.Align.CENTER);
         paintTitle.setTypeface(Typeface.create(Typeface.SANS_SERIF,Typeface.BOLD));
         paintAuthor = new Paint();
         paintAuthor.setColor(Color.BLACK);
-        paintAuthor.setTextSize(20);
         paintAuthor.setTextAlign(Paint.Align.CENTER);
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.ITALIC));
-        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
-        textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
+        paintFPS = new Paint();
+        paintFPS.setColor(Color.BLACK);
 
         state = GameState.INIT;
         loading = 0;
@@ -104,6 +101,13 @@ public class MainGamePanel extends SurfaceView implements
         paintGrid.setStrokeWidth(bw/50);
         paintCross.setStrokeWidth(bw/20);
         paintNought.setStrokeWidth(bw/20);
+        scale = Math.min(sw,sh)/480;
+        paintText.setTextSize(60*scale);
+        paintTitle.setTextSize(80*scale);
+        paintAuthor.setTextSize(20 * scale);
+        paintFPS.setTextSize(16*scale);
+        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
+        textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
         isReady = true;
         startPlaying();
     }
@@ -250,7 +254,7 @@ public class MainGamePanel extends SurfaceView implements
                 }
                 break;
         }
-        displayFps(canvas, avgFps);
+        if(avgFps!=null)canvas.drawText(avgFps, sw - 60*scale, 20*scale, paintFPS);
     }
 
     public void update() {
@@ -260,14 +264,6 @@ public class MainGamePanel extends SurfaceView implements
                 loading = 0;
                 state = GameState.MENU;
             }
-        }
-    }
-
-    private void displayFps(Canvas canvas, String fps) {
-        if (canvas != null && fps != null) {
-            Paint paint = new Paint();
-            paint.setColor(Color.BLACK);
-            canvas.drawText(fps, sw - 50, 20, paint);
         }
     }
 
