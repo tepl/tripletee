@@ -20,19 +20,23 @@ public class MainGamePanel extends SurfaceView implements
 
     private MainThread thread;
     private boolean isReady;
-    private enum GameState { INIT, MENU, PLAY, FINISH }
+
+    private enum GameState {INIT, MENU, PLAY, FINISH}
+
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
     private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor, paintFPS;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
-    private float sw,sh,fontFactor;  // screen width, height and fontFactor
-    private float bw,bx,by,bs;       // board width, offsets and grid step
+    private float sw, sh, fontFactor;  // screen width, height and fontFactor
+    private float bw, bx, by, bs;       // board width, offsets and grid step
     private int player;              // player number, 1 or 2
-    private int textd,textt;         // distance from the baseline to the center
+    private int textd, textt;         // distance from the baseline to the center
+    private boolean tie;
 
     // the fps to be displayed
     private String avgFps;
+
     public void setAvgFps(String avgFps) {
         this.avgFps = avgFps;
     }
@@ -59,11 +63,11 @@ public class MainGamePanel extends SurfaceView implements
         paintTitle = new Paint();
         paintTitle.setColor(Color.BLACK);
         paintTitle.setTextAlign(Paint.Align.CENTER);
-        paintTitle.setTypeface(Typeface.create(Typeface.SANS_SERIF,Typeface.BOLD));
+        paintTitle.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
         paintAuthor = new Paint();
         paintAuthor.setColor(Color.BLACK);
         paintAuthor.setTextAlign(Paint.Align.CENTER);
-        paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.ITALIC));
+        paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC));
         paintFPS = new Paint();
         paintFPS.setColor(Color.BLACK);
 
@@ -74,40 +78,40 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         sw = getWidth();
         sh = getHeight();
-        buttonStart = new RectF(sw*.2f,sh*.25f,sw*.8f,sh*.45f);
-        buttonExit  = new RectF(sw*.2f,sh*.55f,sw*.8f,sh*.75f);
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || sw == sh) {
+        buttonStart = new RectF(sw * .2f, sh * .25f, sw * .8f, sh * .45f);
+        buttonExit = new RectF(sw * .2f, sh * .55f, sw * .8f, sh * .75f);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || sw == sh) {
             bw = sw;
             bx = 0;
             by = (sh - bw) / 2;
-            labelRect =  new RectF(0, 0, sw, by);
-            buttonMenu = new RectF(0, by+bw, sw, sh);
-        }
-        else{
+            labelRect = new RectF(0, 0, sw, by);
+            buttonMenu = new RectF(0, by + bw, sw, sh);
+        } else {
             bw = sh;
             bx = sw - bw;
             by = 0;
-            labelRect =  new RectF(0, 0, bx, sh / 2);
+            labelRect = new RectF(0, 0, bx, sh / 2);
             buttonMenu = new RectF(0, sh / 2, bx, sh);
         }
         bs = bw / 3;
         boardRect = new RectF(bx, by, bx + bw, by + bw);
-        paintGrid.setStrokeWidth(bw/50);
-        paintCross.setStrokeWidth(bw/20);
-        paintNought.setStrokeWidth(bw/20);
-        fontFactor = Math.min(sw,sh)/480;
-        paintText.setTextSize(60*fontFactor);
-        paintTitle.setTextSize(80*fontFactor);
+        paintGrid.setStrokeWidth(bw / 50);
+        paintCross.setStrokeWidth(bw / 20);
+        paintNought.setStrokeWidth(bw / 20);
+        fontFactor = Math.min(sw, sh) / 480;
+        paintText.setTextSize(60 * fontFactor);
+        paintTitle.setTextSize(80 * fontFactor);
         paintAuthor.setTextSize(20 * fontFactor);
-        paintFPS.setTextSize(16*fontFactor);
-        textd = -(int)((paintText.descent() + paintText.ascent()) / 2);
-        textt = -(int)((paintTitle.descent() + paintTitle.ascent()) / 2);
+        paintFPS.setTextSize(16 * fontFactor);
+        textd = -(int) ((paintText.descent() + paintText.ascent()) / 2);
+        textt = -(int) ((paintTitle.descent() + paintTitle.ascent()) / 2);
         isReady = true;
         startPlaying();
     }
@@ -120,23 +124,25 @@ public class MainGamePanel extends SurfaceView implements
             try {
                 thread.join();
                 retry = false;
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+            }
         }
     }
 
-    public void startPlaying(){
-        if(!isReady)return;
-        thread = new MainThread(getHolder(),this);
+    public void startPlaying() {
+        if (!isReady) return;
+        thread = new MainThread(getHolder(), this);
         thread.setRunning(true);
         thread.start();
     }
 
-    public void stopPlaying(){
+    public void stopPlaying() {
         thread.setRunning(false);
     }
 
-    static final String SAVE_STATE  = "state";
+    static final String SAVE_STATE = "state";
     static final String SAVE_PLAYER = "player";
+    static final String SAVE_TIE = "tie";
     static final String SAVE_ROW0 = "row0";
     static final String SAVE_ROW1 = "row1";
     static final String SAVE_ROW2 = "row2";
@@ -144,47 +150,50 @@ public class MainGamePanel extends SurfaceView implements
     public void saveState(Bundle savedInstanceState) {
         savedInstanceState.putSerializable(SAVE_STATE, state);
         savedInstanceState.putInt(SAVE_PLAYER, player);
+        savedInstanceState.putBoolean(SAVE_TIE, tie);
         savedInstanceState.putIntArray(SAVE_ROW0, board[0]);
         savedInstanceState.putIntArray(SAVE_ROW1, board[1]);
         savedInstanceState.putIntArray(SAVE_ROW2, board[2]);
     }
 
     public void restoreState(Bundle savedInstanceState) {
-        state = (GameState)savedInstanceState.getSerializable(SAVE_STATE);
+        state = (GameState) savedInstanceState.getSerializable(SAVE_STATE);
         player = savedInstanceState.getInt(SAVE_PLAYER);
+        tie = savedInstanceState.getBoolean(SAVE_TIE);
         board[0] = savedInstanceState.getIntArray(SAVE_ROW0);
         board[1] = savedInstanceState.getIntArray(SAVE_ROW1);
         board[2] = savedInstanceState.getIntArray(SAVE_ROW2);
     }
 
-    public void InitGame(){
+    public void InitGame() {
         for (int[] line : board) Arrays.fill(line, 0);
         player = 1;
+        tie = false;
     }
 
-    private boolean withinRect(int x, int y, RectF r){
+    private boolean withinRect(int x, int y, RectF r) {
         return (r.left <= x && x <= r.right && r.top <= y && y <= r.bottom);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int x = (int)event.getX();
-        int y = (int)event.getY();
-        switch(state){
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        switch (state) {
             case MENU:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (withinRect(x,y,buttonStart)) {
+                    if (withinRect(x, y, buttonStart)) {
                         state = GameState.PLAY;
                         InitGame();
                     }
-                    if (withinRect(x,y,buttonExit)) {
+                    if (withinRect(x, y, buttonExit)) {
                         thread.setRunning(false);
-                        ((Activity)getContext()).finish();
+                        ((Activity) getContext()).finish();
                     }
                 }
                 break;
             case PLAY:
-                if(event.getAction()==MotionEvent.ACTION_DOWN) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     if (withinRect(x, y, buttonMenu)) {
                         state = GameState.MENU;
                     } else if (withinRect(x, y, boardRect)) {
@@ -198,7 +207,13 @@ public class MainGamePanel extends SurfaceView implements
                                         i == j && board[(i + 1) % 3][(j + 1) % 3] == player && board[(i + 2) % 3][(j + 2) % 3] == player ||
                                         i == 2 - j && board[(i + 2) % 3][(j + 1) % 3] == player && board[(i + 1) % 3][(j + 2) % 3] == player)
                                     state = GameState.FINISH;
-                                else player = 2 - (player + 1) % 2;
+                                else {
+                                    for (i = 0; i < 9; i++) if (board[i / 3][i % 3] == 0) break;
+                                    if (i == 9) {
+                                        tie = true;
+                                        state = GameState.FINISH;
+                                    } else player = 2 - (player + 1) % 2;
+                                }
                             }
                         }
                     }
@@ -212,55 +227,58 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     public void render(Canvas canvas) {
-        switch(state){
+        switch (state) {
             case INIT:
-                canvas.drawColor(Color.rgb((int)(loading*256),0,0));
+                canvas.drawColor(Color.rgb((int) (loading * 256), 0, 0));
                 break;
             case MENU:
                 canvas.drawColor(Color.RED);
-                canvas.drawText("Triple Tee",sw/2,sh*.125f+textt,paintTitle);
+                canvas.drawText("Triple Tee", sw / 2, sh * .125f + textt, paintTitle);
                 canvas.drawRect(buttonStart, paintButton);
-                canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY()+textd, paintText);
+                canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY() + textd, paintText);
                 canvas.drawRect(buttonExit, paintButton);
-                canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY()+textd, paintText);
-                canvas.drawText("© 2014 Alexander Teplukhin",sw/2,sh*.85f,paintAuthor);
-                canvas.drawText("Version 1.0",sw/2,sh*.925f,paintAuthor);
+                canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY() + textd, paintText);
+                canvas.drawText("© 2014 Alexander Teplukhin", sw / 2, sh * .85f, paintAuthor);
+                canvas.drawText("Version 1.0", sw / 2, sh * .925f, paintAuthor);
                 break;
             case PLAY:
             case FINISH:
                 canvas.drawColor(Color.WHITE);
-                canvas.drawLine(bx+1*bs, by, bx+bs,   by+bw,   paintGrid);
-                canvas.drawLine(bx+2*bs, by, bx+2*bs, by+bw,   paintGrid);
-                canvas.drawLine(bx, by+1*bs, bx+bw,   by+1*bs, paintGrid);
-                canvas.drawLine(bx, by+2*bs, bx+bw,   by+2*bs, paintGrid);
-                for (int i=0;i<3;i++) for (int j=0;j<3;j++){
-                    if(board[i][j]==1){
-                        canvas.drawLine(bx+bs*(j+.2f),by+bs*(i+.2f),bx+bs*(j+.8f),by+bs*(i+.8f),paintCross);
-                        canvas.drawLine(bx+bs*(j+.8f),by+bs*(i+.2f),bx+bs*(j+.2f),by+bs*(i+.8f),paintCross);
+                canvas.drawLine(bx + 1 * bs, by, bx + bs, by + bw, paintGrid);
+                canvas.drawLine(bx + 2 * bs, by, bx + 2 * bs, by + bw, paintGrid);
+                canvas.drawLine(bx, by + 1 * bs, bx + bw, by + 1 * bs, paintGrid);
+                canvas.drawLine(bx, by + 2 * bs, bx + bw, by + 2 * bs, paintGrid);
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++) {
+                        if (board[i][j] == 1) {
+                            canvas.drawLine(bx + bs * (j + .2f), by + bs * (i + .2f), bx + bs * (j + .8f), by + bs * (i + .8f), paintCross);
+                            canvas.drawLine(bx + bs * (j + .8f), by + bs * (i + .2f), bx + bs * (j + .2f), by + bs * (i + .8f), paintCross);
+                        } else if (board[i][j] == 2) {
+                            canvas.drawCircle(bx + bs * (j + .5f), by + bs * (i + .5f), bs * .3f, paintNought);
+                        }
                     }
-                    else if(board[i][j]==2){
-                        canvas.drawCircle(bx+bs*(j+.5f),by+bs*(i+.5f),bs*.3f,paintNought);
-                    }
-                }
                 canvas.drawRect(buttonMenu, paintButton);
-                canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY()+textd, paintText);
+                canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY() + textd, paintText);
                 String label = "Player " + Integer.toString(player);
-                if(bx>0 && paintText.measureText(label)>bx)label = "Plr " + Integer.toString(player);
-                canvas.drawText(label, labelRect.centerX(), labelRect.centerY()+textd, paintText);
-                if(state==GameState.FINISH){
-                    label = "Player " + Integer.toString(player) + " won!";
+                if (bx > 0 && paintText.measureText(label) > bx)
+                    label = "Plr " + Integer.toString(player);
+                canvas.drawText(label, labelRect.centerX(), labelRect.centerY() + textd, paintText);
+                if (state == GameState.FINISH) {
+                    if (tie) label = "Tie!";
+                    else label = "Player " + Integer.toString(player) + " won!";
                     float tw = paintText.measureText(label);
-                    RectF finishRect = new RectF((sw-tw)/2-.1f*sw,sh*.4f,(sw+tw)/2+.1f*sw,sh*.6f);
-                    canvas.drawRect(finishRect,paintFinish);
-                    canvas.drawText(label, sw/2, sh/2+textd, paintText);
+                    RectF finishRect = new RectF((sw - tw) / 2 - .1f * sw, sh * .4f, (sw + tw) / 2 + .1f * sw, sh * .6f);
+                    canvas.drawRect(finishRect, paintFinish);
+                    canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
                 }
                 break;
         }
-        if(avgFps!=null)canvas.drawText(avgFps, sw - 60*fontFactor, 20*fontFactor, paintFPS);
+        if (avgFps != null)
+            canvas.drawText(avgFps, sw - 60 * fontFactor, 20 * fontFactor, paintFPS);
     }
 
     public void update() {
-        if(state==GameState.INIT) {
+        if (state == GameState.INIT) {
             loading += 0.01;
             if (loading >= 1) {
                 loading = 0;
