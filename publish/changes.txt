@@ -1,0 +1,3 @@
+* Added tie message
+* Fixed fonts
+* Fixed player label for landscape 4:3 screen
