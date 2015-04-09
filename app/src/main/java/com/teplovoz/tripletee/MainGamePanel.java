@@ -150,6 +150,7 @@ public class MainGamePanel extends SurfaceView implements
     static final String SAVE_ROW0 = "row0";
     static final String SAVE_ROW1 = "row1";
     static final String SAVE_ROW2 = "row2";
+    static final String SAVE_ANIMATIONS = "animations";
 
     public void saveState(Bundle savedInstanceState) {
         savedInstanceState.putSerializable(SAVE_STATE, state);
@@ -158,6 +159,7 @@ public class MainGamePanel extends SurfaceView implements
         savedInstanceState.putIntArray(SAVE_ROW0, board[0]);
         savedInstanceState.putIntArray(SAVE_ROW1, board[1]);
         savedInstanceState.putIntArray(SAVE_ROW2, board[2]);
+        savedInstanceState.putParcelableArrayList(SAVE_ANIMATIONS, animations);
     }
 
     public void restoreState(Bundle savedInstanceState) {
@@ -167,6 +169,7 @@ public class MainGamePanel extends SurfaceView implements
         board[0] = savedInstanceState.getIntArray(SAVE_ROW0);
         board[1] = savedInstanceState.getIntArray(SAVE_ROW1);
         board[2] = savedInstanceState.getIntArray(SAVE_ROW2);
+        animations = savedInstanceState.getParcelableArrayList(SAVE_ANIMATIONS);
     }
 
     public void InitGame() {
@@ -208,7 +211,7 @@ public class MainGamePanel extends SurfaceView implements
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
                                 synchronized (animations) {
-                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), player == 1 ? R.drawable.cross : R.drawable.nought), (int) (bx + j * bs), (int) (by + i * bs), 5, 5, false));
+                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), player == 1 ? R.drawable.cross : R.drawable.nought), (int) (j * bs), (int) (i * bs), 5, 5, false));
                                 }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
@@ -254,7 +257,7 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawColor(Color.WHITE);
                 synchronized (animations) {
                     for (Animation animation : animations) {
-                        animation.draw(canvas);
+                        animation.draw(canvas, (int) bx, (int) by);
                     }
                 }
                 canvas.drawLine(bx + 1 * bs, by, bx + bs, by + bw, paintGrid);

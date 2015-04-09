@@ -4,8 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Animation {
+public class Animation implements Parcelable {
 
     private Bitmap bitmap;		// the animation sequence
     private Rect sourceRect;	// the rectangle to be drawn from the animation bitmap
@@ -38,6 +40,48 @@ public class Animation {
         running = true;
     }
 
+    public Animation(Parcel in){
+        bitmap = Bitmap.CREATOR.createFromParcel(in);
+        x = in.readInt();
+        y = in.readInt();
+        currentFrame = in.readInt();
+        frameNr = in.readInt();
+        spriteWidth = in.readInt();
+        spriteHeight = in.readInt();
+        sourceRect = new Rect(0, 0, spriteWidth, spriteHeight);
+        framePeriod = in.readInt();
+        frameTicker = in.readLong();
+        repeating = (Boolean) in.readValue(null);
+        running = (Boolean) in.readValue(null);
+    }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel out, int flags){
+        bitmap.writeToParcel(out,0);
+        out.writeInt(x);
+        out.writeInt(y);
+        out.writeInt(currentFrame);
+        out.writeInt(frameNr);
+        out.writeInt(spriteWidth);
+        out.writeInt(spriteHeight);
+        out.writeInt(framePeriod);
+        out.writeLong(frameTicker);
+        out.writeValue(repeating);
+        out.writeValue(running);
+    }
+
+    public static final Parcelable.Creator<Animation> CREATOR = new Parcelable.Creator<Animation>() {
+        public Animation createFromParcel(Parcel in) {
+            return new Animation(in);
+        }
+
+        public Animation[] newArray(int size) {
+            return new Animation[size];
+        }
+    };
 
     public Bitmap getBitmap() {
         return bitmap;
@@ -112,9 +156,9 @@ public class Animation {
     }
 
     // the draw method which draws the corresponding frame
-    public void draw(Canvas canvas) {
+    public void draw(Canvas canvas, int bx, int by) {
         // where to draw the sprite
-        Rect destRect = new Rect(getX(), getY(), getX() + spriteWidth, getY() + spriteHeight);
+        Rect destRect = new Rect(bx + getX(), by + getY(), bx + getX() + spriteWidth, by + getY() + spriteHeight);
         canvas.drawBitmap(bitmap, sourceRect, destRect, null);
     }
 }
