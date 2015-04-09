@@ -100,11 +100,11 @@ public class Animation {
         if (gameTime > frameTicker + framePeriod) {
             frameTicker = gameTime;
             // increment the frame
-            currentFrame++;
-            if (currentFrame >= frameNr) {
+            if (currentFrame >= frameNr-1) {
                 if(repeating)currentFrame = 0;
                 else running = false;
             }
+            else currentFrame++;
         }
         // define the rectangle to cut out sprite
         this.sourceRect.left = currentFrame * spriteWidth;

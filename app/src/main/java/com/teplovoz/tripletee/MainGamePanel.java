@@ -208,7 +208,7 @@ public class MainGamePanel extends SurfaceView implements
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
                                 synchronized (animations) {
-                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), R.drawable.cross), (int) (bx + j * bs), (int) (by + i * bs), 5, 5, false));
+                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), player == 1 ? R.drawable.cross : R.drawable.nought), (int) (bx + j * bs), (int) (by + i * bs), 5, 5, false));
                                 }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
@@ -252,19 +252,15 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
             case FINISH:
                 canvas.drawColor(Color.WHITE);
+                synchronized (animations) {
+                    for (Animation animation : animations) {
+                        animation.draw(canvas);
+                    }
+                }
                 canvas.drawLine(bx + 1 * bs, by, bx + bs, by + bw, paintGrid);
                 canvas.drawLine(bx + 2 * bs, by, bx + 2 * bs, by + bw, paintGrid);
                 canvas.drawLine(bx, by + 1 * bs, bx + bw, by + 1 * bs, paintGrid);
                 canvas.drawLine(bx, by + 2 * bs, bx + bw, by + 2 * bs, paintGrid);
-                for (int i = 0; i < 3; i++)
-                    for (int j = 0; j < 3; j++) {
-                        if (board[i][j] == 1) {
-                            canvas.drawLine(bx + bs * (j + .2f), by + bs * (i + .2f), bx + bs * (j + .8f), by + bs * (i + .8f), paintCross);
-                            canvas.drawLine(bx + bs * (j + .8f), by + bs * (i + .2f), bx + bs * (j + .2f), by + bs * (i + .8f), paintCross);
-                        } else if (board[i][j] == 2) {
-                            canvas.drawCircle(bx + bs * (j + .5f), by + bs * (i + .5f), bs * .3f, paintNought);
-                        }
-                    }
                 canvas.drawRect(buttonMenu, paintButton);
                 canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY() + textd, paintText);
                 String label = "Player " + Integer.toString(player);
@@ -278,11 +274,6 @@ public class MainGamePanel extends SurfaceView implements
                     RectF finishRect = new RectF((sw - tw) / 2 - .1f * sw, sh * .4f, (sw + tw) / 2 + .1f * sw, sh * .6f);
                     canvas.drawRect(finishRect, paintFinish);
                     canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
-                }
-                synchronized (animations) {
-                    for (Animation animation : animations) {
-                        animation.draw(canvas);
-                    }
                 }
                 break;
         }
