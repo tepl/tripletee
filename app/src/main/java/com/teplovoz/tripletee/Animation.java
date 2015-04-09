@@ -20,10 +20,14 @@ public class Animation {
     private int x;				// the X coordinate of the object (top left of the image)
     private int y;				// the Y coordinate of the object (top left of the image)
 
-    public Animation(Bitmap bitmap, int x, int y, int width, int height, int fps, int frameCount) {
+    private boolean repeating;     // replays animation
+    private boolean running;    // is animation running or not
+
+    public Animation(Bitmap bitmap, int x, int y, int fps, int frameCount, boolean repeating) {
         this.bitmap = bitmap;
         this.x = x;
         this.y = y;
+        this.repeating = repeating;
         currentFrame = 0;
         frameNr = frameCount;
         spriteWidth = bitmap.getWidth() / frameCount;
@@ -31,6 +35,7 @@ public class Animation {
         sourceRect = new Rect(0, 0, spriteWidth, spriteHeight);
         framePeriod = 1000 / fps;
         frameTicker = 0l;
+        running = true;
     }
 
 
@@ -91,12 +96,14 @@ public class Animation {
 
     // the update method for Elaine
     public void update(long gameTime) {
+        if(!running)return;
         if (gameTime > frameTicker + framePeriod) {
             frameTicker = gameTime;
             // increment the frame
             currentFrame++;
             if (currentFrame >= frameNr) {
-                currentFrame = 0;
+                if(repeating)currentFrame = 0;
+                else running = false;
             }
         }
         // define the rectangle to cut out sprite

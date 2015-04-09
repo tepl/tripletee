@@ -14,13 +14,15 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 public class MainGamePanel extends SurfaceView implements
         SurfaceHolder.Callback {
 
     private MainThread thread;
-    private Animation cross;
+    private ArrayList<Animation> animations = new ArrayList<Animation>();
     private boolean isReady;
 
     private enum GameState {INIT, MENU, PLAY, FINISH}
@@ -46,13 +48,6 @@ public class MainGamePanel extends SurfaceView implements
     public MainGamePanel(Context context) {
         super(context);
         getHolder().addCallback(this);
-
-        // create Cross animation
-        cross = new Animation(
-                BitmapFactory.decodeResource(getResources(), R.drawable.cross)
-                , 10, 50	// initial position
-                , 100, 100	// width and height of sprite
-                , 5, 5);	// FPS and number of frames in the animation
 
         // Graphic elements
         paintButton = new Paint();
@@ -176,6 +171,7 @@ public class MainGamePanel extends SurfaceView implements
 
     public void InitGame() {
         for (int[] line : board) Arrays.fill(line, 0);
+        animations.clear();
         player = 1;
         tie = false;
     }
@@ -211,6 +207,9 @@ public class MainGamePanel extends SurfaceView implements
                         if (0 <= i && i <= 2 && 0 <= j && j <= 2) {
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
+                                synchronized (animations) {
+                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), R.drawable.cross), (int) (bx + j * bs), (int) (by + i * bs), 5, 5, false));
+                                }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
                                         i == j && board[(i + 1) % 3][(j + 1) % 3] == player && board[(i + 2) % 3][(j + 2) % 3] == player ||
@@ -280,7 +279,11 @@ public class MainGamePanel extends SurfaceView implements
                     canvas.drawRect(finishRect, paintFinish);
                     canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
                 }
-                cross.draw(canvas);
+                synchronized (animations) {
+                    for (Animation animation : animations) {
+                        animation.draw(canvas);
+                    }
+                }
                 break;
         }
         if (avgFps != null)
@@ -288,7 +291,11 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     public void update() {
-        cross.update(System.currentTimeMillis());
+        synchronized (animations) {
+            for (Animation animation : animations) {
+                animation.update(System.currentTimeMillis());
+            }
+        }
         if (state == GameState.INIT) {
             loading += 0.01;
             if (loading >= 1) {
