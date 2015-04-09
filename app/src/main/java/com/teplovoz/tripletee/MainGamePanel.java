@@ -3,6 +3,7 @@ package com.teplovoz.tripletee;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,6 +20,7 @@ public class MainGamePanel extends SurfaceView implements
         SurfaceHolder.Callback {
 
     private MainThread thread;
+    private Animation cross;
     private boolean isReady;
 
     private enum GameState {INIT, MENU, PLAY, FINISH}
@@ -44,6 +46,13 @@ public class MainGamePanel extends SurfaceView implements
     public MainGamePanel(Context context) {
         super(context);
         getHolder().addCallback(this);
+
+        // create Cross animation
+        cross = new Animation(
+                BitmapFactory.decodeResource(getResources(), R.drawable.cross)
+                , 10, 50	// initial position
+                , 100, 100	// width and height of sprite
+                , 5, 5);	// FPS and number of frames in the animation
 
         // Graphic elements
         paintButton = new Paint();
@@ -271,6 +280,7 @@ public class MainGamePanel extends SurfaceView implements
                     canvas.drawRect(finishRect, paintFinish);
                     canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
                 }
+                cross.draw(canvas);
                 break;
         }
         if (avgFps != null)
@@ -278,6 +288,7 @@ public class MainGamePanel extends SurfaceView implements
     }
 
     public void update() {
+        cross.update(System.currentTimeMillis());
         if (state == GameState.INIT) {
             loading += 0.01;
             if (loading >= 1) {
