@@ -22,13 +22,18 @@ public class Animation implements Parcelable {
     private int x;				// the X coordinate of the object (top left of the image)
     private int y;				// the Y coordinate of the object (top left of the image)
 
+    private int destw;			// the width of destination
+    private int desth;			// the height of destination
+
     private boolean repeating;     // replays animation
     private boolean running;    // is animation running or not
 
-    public Animation(Bitmap bitmap, int x, int y, int fps, int frameCount, boolean repeating) {
+    public Animation(Bitmap bitmap, int x, int y, int destw, int desth, int fps, int frameCount, boolean repeating) {
         this.bitmap = bitmap;
         this.x = x;
         this.y = y;
+        this.destw = destw;
+        this.desth = desth;
         this.repeating = repeating;
         currentFrame = 0;
         frameNr = frameCount;
@@ -158,7 +163,7 @@ public class Animation implements Parcelable {
     // the draw method which draws the corresponding frame
     public void draw(Canvas canvas, int bx, int by) {
         // where to draw the sprite
-        Rect destRect = new Rect(bx + getX(), by + getY(), bx + getX() + spriteWidth, by + getY() + spriteHeight);
+        Rect destRect = new Rect(bx + getX(), by + getY(), bx + getX() + destw, by + getY() + desth);
         canvas.drawBitmap(bitmap, sourceRect, destRect, null);
     }
 }
