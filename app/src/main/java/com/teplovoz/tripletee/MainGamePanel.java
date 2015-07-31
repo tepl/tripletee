@@ -3,6 +3,7 @@ package com.teplovoz.tripletee;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -32,6 +33,7 @@ public class MainGamePanel extends SurfaceView implements
     private float loading;
     private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor, paintFPS;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
+    private Bitmap bitmapCross, bitmapNought;
     private float sw, sh, fontFactor;  // screen width, height and fontFactor
     private float bw, bx, by, bs;       // board width, offsets and grid step
     private int player;              // player number, 1 or 2
@@ -74,6 +76,9 @@ public class MainGamePanel extends SurfaceView implements
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC));
         paintFPS = new Paint();
         paintFPS.setColor(Color.BLACK);
+
+        bitmapCross = BitmapFactory.decodeResource(getResources(),R.drawable.cross);
+        bitmapNought = BitmapFactory.decodeResource(getResources(),R.drawable.nought);
 
         state = GameState.INIT;
         loading = 0;
@@ -211,7 +216,7 @@ public class MainGamePanel extends SurfaceView implements
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
                                 synchronized (animations) {
-                                    animations.add(new Animation(BitmapFactory.decodeResource(getResources(), player == 1 ? R.drawable.cross : R.drawable.nought), (int) (j * bs), (int) (i * bs), (int) bs, (int) bs, 30, 30, false));
+                                    animations.add(new Animation(player == 1 ? bitmapCross : bitmapNought, (int) (j * bs), (int) (i * bs), (int) bs, (int) bs, 30, 30, false));
                                 }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
