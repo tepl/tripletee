@@ -31,13 +31,14 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintTitle, paintAuthor, paintFPS;
-    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect;
-    private Bitmap bitmapCross, bitmapNought;
+    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintAuthor, paintFPS;
+    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, titleRect;
+    private Bitmap bitmapCross, bitmapNought, bitmapSplash, bitmapTitle;
+    private Animation splash;
     private float sw, sh, fontFactor;  // screen width, height and fontFactor
     private float bw, bx, by, bs;       // board width, offsets and grid step
     private int player;              // player number, 1 or 2
-    private int textd, textt;         // distance from the baseline to the center
+    private int textd;         // distance from the baseline to the center
     private boolean tie;
 
     // the fps to be displayed
@@ -66,19 +67,12 @@ public class MainGamePanel extends SurfaceView implements
         paintNought.setStyle(Paint.Style.STROKE);
         paintFinish = new Paint();
         paintFinish.setColor(Color.CYAN);
-        paintTitle = new Paint();
-        paintTitle.setColor(Color.BLACK);
-        paintTitle.setTextAlign(Paint.Align.CENTER);
-        paintTitle.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
         paintAuthor = new Paint();
         paintAuthor.setColor(Color.BLACK);
         paintAuthor.setTextAlign(Paint.Align.CENTER);
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC));
         paintFPS = new Paint();
         paintFPS.setColor(Color.BLACK);
-
-        bitmapCross = BitmapFactory.decodeResource(getResources(),R.drawable.cross);
-        bitmapNought = BitmapFactory.decodeResource(getResources(),R.drawable.nought);
 
         state = GameState.INIT;
         loading = 0;
@@ -102,25 +96,39 @@ public class MainGamePanel extends SurfaceView implements
             by = (sh - bw) / 2;
             labelRect = new RectF(0, 0, sw, by);
             buttonMenu = new RectF(0, by + bw, sw, sh);
+            titleRect = new RectF(0, (sh * .25f - sw / 6) / 2, sw, (sh * .25f + sw / 6) / 2);
         } else {
             bw = sh;
             bx = sw - bw;
             by = 0;
             labelRect = new RectF(0, 0, bx, sh / 2);
             buttonMenu = new RectF(0, sh / 2, bx, sh);
+            titleRect = new RectF((sw - sh * .25f * 6) / 2, 0, (sw + sh * .25f * 6) / 2, sh * .25f);
         }
         bs = bw / 3;
+
+        if (bs <= 160) {
+            bitmapCross = BitmapFactory.decodeResource(getResources(), R.drawable.cross160);
+            bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought160);
+            bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash160);
+            bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title160);
+        } else {
+            bitmapCross = BitmapFactory.decodeResource(getResources(), R.drawable.cross320);
+            bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought320);
+            bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash320);
+            bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title320);
+        }
+        splash = new Animation(bitmapSplash, (int) (sw / 2 - bs / 2), (int) (sh / 2 - bs / 2), (int) bs, (int) bs, 30, 30, false);
+
         boardRect = new RectF(bx, by, bx + bw, by + bw);
         paintGrid.setStrokeWidth(bw / 50);
         paintCross.setStrokeWidth(bw / 20);
         paintNought.setStrokeWidth(bw / 20);
         fontFactor = Math.min(sw, sh) / 480;
         paintText.setTextSize(60 * fontFactor);
-        paintTitle.setTextSize(80 * fontFactor);
         paintAuthor.setTextSize(20 * fontFactor);
         paintFPS.setTextSize(16 * fontFactor);
         textd = -(int) ((paintText.descent() + paintText.ascent()) / 2);
-        textt = -(int) ((paintTitle.descent() + paintTitle.ascent()) / 2);
         isReady = true;
         startPlaying();
     }
@@ -245,11 +253,12 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch (state) {
             case INIT:
-                canvas.drawColor(Color.rgb((int) (loading * 256), 0, 0));
+                canvas.drawColor(Color.WHITE);
+                splash.draw(canvas, 0, 0);
                 break;
             case MENU:
-                canvas.drawColor(Color.RED);
-                canvas.drawText("Triple Tee", sw / 2, sh * .125f + textt, paintTitle);
+                canvas.drawColor(Color.WHITE);
+                canvas.drawBitmap(bitmapTitle, null, titleRect, null);
                 canvas.drawRect(buttonStart, paintButton);
                 canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY() + textd, paintText);
                 canvas.drawRect(buttonExit, paintButton);
@@ -296,6 +305,7 @@ public class MainGamePanel extends SurfaceView implements
             }
         }
         if (state == GameState.INIT) {
+            splash.update(System.currentTimeMillis());
             loading += 0.01;
             if (loading >= 1) {
                 loading = 0;

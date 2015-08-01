@@ -6,7 +6,7 @@ import android.view.SurfaceHolder;
 public class MainThread extends Thread {
 
     // desired fps
-    private final static int MAX_FPS = 50;
+    private final static int MAX_FPS = 30;
     // maximum number of frames to be skipped
     private final static int MAX_FRAME_SKIPS = 5;
     // the frame period
