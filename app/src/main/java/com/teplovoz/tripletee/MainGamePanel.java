@@ -216,7 +216,7 @@ public class MainGamePanel extends SurfaceView implements
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
                                 synchronized (animations) {
-                                    animations.add(new Animation(player == 1 ? bitmapCross : bitmapNought, (int) (j * bs), (int) (i * bs), (int) bs, (int) bs, 30, 30, false));
+                                    animations.add(new Animation(player == 1 ? bitmapCross : bitmapNought, (int) (j * bs), (int) (i * bs), (int) bs, (int) bs, 30, 15, false));
                                 }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||

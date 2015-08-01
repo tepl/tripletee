@@ -1,5 +1,5 @@
 nRows = 1;
-nCols = 30;
+nCols = 15;
 imgCell = cell(nRows,nCols);
 
 for iImage = 1:nRows*nCols
