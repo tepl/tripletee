@@ -9,9 +9,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.NinePatchDrawable;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -19,7 +19,6 @@ import android.view.SurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 public class MainGamePanel extends SurfaceView implements
         SurfaceHolder.Callback {
@@ -33,16 +32,16 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintAuthor, paintFPS;
-    private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, titleRect;
-    private Rect grRectFull, grRectBoard;
+    private Paint paintText, paintGrid, paintFinish, paintAuthor, paintFPS;
+    private Rect screenRect, boardRect, startRect, exitRect, menuRect, labelRect, titleRect;
     private Bitmap bitmapCross, bitmapNought, bitmapSplash, bitmapTitle;
     private GradientDrawable gradient;
+    private NinePatchDrawable button;
     private Animation splash;
-    private float sw, sh, fontFactor;  // screen width, height and fontFactor
-    private float bw, bx, by, bs;       // board width, offsets and grid step
-    private int player;              // player number, 1 or 2
-    private int textd;         // distance from the baseline to the center
+    private float fontFactor;
+    private int sw, sh, bw, bx, by, bs;     // screen, board, offsets and grid step
+    private int player;                     // player number, 1 or 2
+    private int textd;                      // distance from the baseline to the center
     private boolean tie;
 
     // the fps to be displayed
@@ -57,18 +56,11 @@ public class MainGamePanel extends SurfaceView implements
         getHolder().addCallback(this);
 
         // Graphic elements
-        paintButton = new Paint();
-        paintButton.setColor(Color.GREEN);
         paintText = new Paint();
         paintText.setColor(Color.BLACK);
         paintText.setTextAlign(Paint.Align.CENTER);
         paintGrid = new Paint();
         paintGrid.setColor(Color.BLACK);
-        paintCross = new Paint();
-        paintCross.setColor(Color.RED);
-        paintNought = new Paint();
-        paintNought.setColor(Color.BLUE);
-        paintNought.setStyle(Paint.Style.STROKE);
         paintFinish = new Paint();
         paintFinish.setColor(Color.CYAN);
         paintAuthor = new Paint();
@@ -95,22 +87,22 @@ public class MainGamePanel extends SurfaceView implements
     public void surfaceCreated(SurfaceHolder holder) {
         sw = getWidth();
         sh = getHeight();
-        buttonStart = new RectF(sw * .2f, sh * .25f, sw * .8f, sh * .45f);
-        buttonExit = new RectF(sw * .2f, sh * .55f, sw * .8f, sh * .75f);
+        startRect = new Rect((int) (sw * .2f), (int) (sh * .25f), (int) (sw * .8f), (int) (sh * .45f));
+        exitRect = new Rect((int) (sw * .2f), (int) (sh * .55f), (int) (sw * .8f), (int) (sh * .75f));
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || sw == sh) {
             bw = sw;
             bx = 0;
             by = (sh - bw) / 2;
-            labelRect = new RectF(0, 0, sw, by);
-            buttonMenu = new RectF(0, by + bw, sw, sh);
-            titleRect = new RectF(0, (sh * .25f - sw / 6) / 2, sw, (sh * .25f + sw / 6) / 2);
+            labelRect = new Rect(0, 0, sw, by);
+            menuRect = new Rect(0, by + bw, sw, sh);
+            titleRect = new Rect(0, (int) (sh * .25f - sw / 6) / 2, sw, (int) (sh * .25f + sw / 6) / 2);
         } else {
             bw = sh;
             bx = sw - bw;
             by = 0;
-            labelRect = new RectF(0, 0, bx, sh / 2);
-            buttonMenu = new RectF(0, sh / 2, bx, sh);
-            titleRect = new RectF((sw - sh * .25f * 6) / 2, 0, (sw + sh * .25f * 6) / 2, sh * .25f);
+            labelRect = new Rect(0, 0, bx, sh / 2);
+            menuRect = new Rect(0, sh / 2, bx, sh);
+            titleRect = new Rect((int) (sw - sh * .25f * 6) / 2, 0, (int) (sw + sh * .25f * 6) / 2, (int) (sh * .25f));
         }
         bs = bw / 3;
 
@@ -125,21 +117,18 @@ public class MainGamePanel extends SurfaceView implements
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash320);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title320);
         }
-        splash = new Animation(bitmapSplash, (int) (sw / 2 - bs / 2), (int) (sh / 2 - bs / 2), (int) bs, (int) bs, 30, 30, false);
+        button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button);
+        splash = new Animation(bitmapSplash, (sw - bs) / 2, (sh - bs) / 2, bs, bs, 30, 30, false);
 
-        boardRect = new RectF(bx, by, bx + bw, by + bw);
+        boardRect = new Rect(bx, by, bx + bw, by + bw);
+        screenRect = new Rect(0, 0, sw, sh);
         paintGrid.setStrokeWidth(bw / 50);
-        paintCross.setStrokeWidth(bw / 20);
-        paintNought.setStrokeWidth(bw / 20);
         fontFactor = Math.min(sw, sh) / 480;
         paintText.setTextSize(60 * fontFactor);
         paintAuthor.setTextSize(20 * fontFactor);
         paintFPS.setTextSize(16 * fontFactor);
         textd = -(int) ((paintText.descent() + paintText.ascent()) / 2);
         gradient.setGradientRadius(bw);
-        grRectFull = new Rect(0, 0, (int) sw, (int) sh);
-        grRectBoard = new Rect();
-        boardRect.round(grRectBoard);
         isReady = true;
         startPlaying();
     }
@@ -203,7 +192,7 @@ public class MainGamePanel extends SurfaceView implements
         tie = false;
     }
 
-    private boolean withinRect(int x, int y, RectF r) {
+    private boolean withinRect(int x, int y, Rect r) {
         return (r.left <= x && x <= r.right && r.top <= y && y <= r.bottom);
     }
 
@@ -214,11 +203,11 @@ public class MainGamePanel extends SurfaceView implements
         switch (state) {
             case MENU:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (withinRect(x, y, buttonStart)) {
+                    if (withinRect(x, y, startRect)) {
                         state = GameState.PLAY;
                         InitGame();
                     }
-                    if (withinRect(x, y, buttonExit)) {
+                    if (withinRect(x, y, exitRect)) {
                         thread.setRunning(false);
                         ((Activity) getContext()).finish();
                     }
@@ -226,16 +215,16 @@ public class MainGamePanel extends SurfaceView implements
                 break;
             case PLAY:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (withinRect(x, y, buttonMenu)) {
+                    if (withinRect(x, y, menuRect)) {
                         state = GameState.MENU;
                     } else if (withinRect(x, y, boardRect)) {
-                        int j = (int) ((x - bx) / bs);
-                        int i = (int) ((y - by) / bs);
+                        int j = (x - bx) / bs;
+                        int i = (y - by) / bs;
                         if (0 <= i && i <= 2 && 0 <= j && j <= 2) {
                             if (board[i][j] == 0) {
                                 board[i][j] = player;
                                 synchronized (animations) {
-                                    animations.add(new Animation(player == 1 ? bitmapCross : bitmapNought, (int) (j * bs), (int) (i * bs), (int) bs, (int) bs, 30, 15, false));
+                                    animations.add(new Animation(player == 1 ? bitmapCross : bitmapNought, j * bs, i * bs, bs, bs, 30, 15, false));
                                 }
                                 if (board[i][(j + 1) % 3] == player && board[i][(j + 2) % 3] == player ||
                                         board[(i + 1) % 3][j] == player && board[(i + 2) % 3][j] == player ||
@@ -264,37 +253,40 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch (state) {
             case INIT:
-                gradient.setBounds(grRectFull);
+                gradient.setBounds(screenRect);
                 gradient.draw(canvas);
                 splash.draw(canvas, 0, 0);
                 break;
             case MENU:
-                gradient.setBounds(grRectFull);
+                gradient.setBounds(screenRect);
                 gradient.draw(canvas);
                 canvas.drawBitmap(bitmapTitle, null, titleRect, null);
-                canvas.drawRect(buttonStart, paintButton);
-                canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY() + textd, paintText);
-                canvas.drawRect(buttonExit, paintButton);
-                canvas.drawText("Exit", buttonExit.centerX(), buttonExit.centerY() + textd, paintText);
+                button.setBounds(startRect);
+                button.draw(canvas);
+                canvas.drawText("Start", startRect.centerX(), startRect.centerY() + textd, paintText);
+                button.setBounds(exitRect);
+                button.draw(canvas);
+                canvas.drawText("Exit", exitRect.centerX(), exitRect.centerY() + textd, paintText);
                 canvas.drawText("© 2015 Alexander Teplukhin", sw / 2, sh * .85f, paintAuthor);
                 canvas.drawText("Version 1.2", sw / 2, sh * .925f, paintAuthor);
                 break;
             case PLAY:
             case FINISH:
                 canvas.drawColor(Color.WHITE);
-                gradient.setBounds(grRectBoard);
+                gradient.setBounds(boardRect);
                 gradient.draw(canvas);
                 synchronized (animations) {
                     for (Animation animation : animations) {
-                        animation.draw(canvas, (int) bx, (int) by);
+                        animation.draw(canvas, bx, by);
                     }
                 }
                 canvas.drawLine(bx + 1 * bs, by, bx + bs, by + bw, paintGrid);
                 canvas.drawLine(bx + 2 * bs, by, bx + 2 * bs, by + bw, paintGrid);
                 canvas.drawLine(bx, by + 1 * bs, bx + bw, by + 1 * bs, paintGrid);
                 canvas.drawLine(bx, by + 2 * bs, bx + bw, by + 2 * bs, paintGrid);
-                canvas.drawRect(buttonMenu, paintButton);
-                canvas.drawText("Menu", buttonMenu.centerX(), buttonMenu.centerY() + textd, paintText);
+                button.setBounds(menuRect);
+                button.draw(canvas);
+                canvas.drawText("Menu", menuRect.centerX(), menuRect.centerY() + textd, paintText);
                 String label = "Player " + Integer.toString(player);
                 if (bx > 0 && paintText.measureText(label) > bx)
                     label = "Plr " + Integer.toString(player);
@@ -302,8 +294,8 @@ public class MainGamePanel extends SurfaceView implements
                 if (state == GameState.FINISH) {
                     if (tie) label = "Tie!";
                     else label = "Player " + Integer.toString(player) + " won!";
-                    float tw = paintText.measureText(label);
-                    RectF finishRect = new RectF((sw - tw) / 2 - .1f * sw, sh * .4f, (sw + tw) / 2 + .1f * sw, sh * .6f);
+                    int tw = (int) paintText.measureText(label);
+                    Rect finishRect = new Rect((int) ((sw - tw) / 2 - .1f * sw), (int) (sh * .4f), (int) ((sw + tw) / 2 + .1f * sw), (int) (sh * .6f));
                     canvas.drawRect(finishRect, paintFinish);
                     canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
                 }
