@@ -8,8 +8,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -33,7 +35,9 @@ public class MainGamePanel extends SurfaceView implements
     private float loading;
     private Paint paintButton, paintText, paintGrid, paintCross, paintNought, paintFinish, paintAuthor, paintFPS;
     private RectF buttonStart, buttonExit, buttonMenu, boardRect, labelRect, titleRect;
+    private Rect grRectFull, grRectBoard;
     private Bitmap bitmapCross, bitmapNought, bitmapSplash, bitmapTitle;
+    private GradientDrawable gradient;
     private Animation splash;
     private float sw, sh, fontFactor;  // screen width, height and fontFactor
     private float bw, bx, by, bs;       // board width, offsets and grid step
@@ -73,6 +77,9 @@ public class MainGamePanel extends SurfaceView implements
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC));
         paintFPS = new Paint();
         paintFPS.setColor(Color.BLACK);
+        gradient = new GradientDrawable(GradientDrawable.Orientation.BL_TR, new int[]{Color.WHITE, Color.CYAN});
+        gradient.setShape(GradientDrawable.RECTANGLE);
+        gradient.setGradientType(GradientDrawable.RADIAL_GRADIENT);
 
         state = GameState.INIT;
         loading = 0;
@@ -129,6 +136,10 @@ public class MainGamePanel extends SurfaceView implements
         paintAuthor.setTextSize(20 * fontFactor);
         paintFPS.setTextSize(16 * fontFactor);
         textd = -(int) ((paintText.descent() + paintText.ascent()) / 2);
+        gradient.setGradientRadius(bw);
+        grRectFull = new Rect(0, 0, (int) sw, (int) sh);
+        grRectBoard = new Rect();
+        boardRect.round(grRectBoard);
         isReady = true;
         startPlaying();
     }
@@ -253,11 +264,13 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch (state) {
             case INIT:
-                canvas.drawColor(Color.WHITE);
+                gradient.setBounds(grRectFull);
+                gradient.draw(canvas);
                 splash.draw(canvas, 0, 0);
                 break;
             case MENU:
-                canvas.drawColor(Color.WHITE);
+                gradient.setBounds(grRectFull);
+                gradient.draw(canvas);
                 canvas.drawBitmap(bitmapTitle, null, titleRect, null);
                 canvas.drawRect(buttonStart, paintButton);
                 canvas.drawText("Start", buttonStart.centerX(), buttonStart.centerY() + textd, paintText);
@@ -269,6 +282,8 @@ public class MainGamePanel extends SurfaceView implements
             case PLAY:
             case FINISH:
                 canvas.drawColor(Color.WHITE);
+                gradient.setBounds(grRectBoard);
+                gradient.draw(canvas);
                 synchronized (animations) {
                     for (Animation animation : animations) {
                         animation.draw(canvas, (int) bx, (int) by);
