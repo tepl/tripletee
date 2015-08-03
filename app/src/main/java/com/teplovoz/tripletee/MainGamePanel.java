@@ -35,7 +35,7 @@ public class MainGamePanel extends SurfaceView implements
     private Paint paintText, paintGrid, paintFinish, paintAuthor, paintFPS;
     private Rect screenRect, boardRect, startRect, exitRect, menuRect, labelRect, titleRect;
     private Bitmap bitmapCross, bitmapNought, bitmapSplash, bitmapTitle;
-    private GradientDrawable gradient;
+    private GradientDrawable gradientScreen, gradientBoard;
     private NinePatchDrawable button;
     private Animation splash;
     private float fontFactor;
@@ -69,9 +69,12 @@ public class MainGamePanel extends SurfaceView implements
         paintAuthor.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC));
         paintFPS = new Paint();
         paintFPS.setColor(Color.BLACK);
-        gradient = new GradientDrawable(GradientDrawable.Orientation.BL_TR, new int[]{Color.WHITE, Color.CYAN});
-        gradient.setShape(GradientDrawable.RECTANGLE);
-        gradient.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        gradientScreen = new GradientDrawable(GradientDrawable.Orientation.BL_TR, new int[]{Color.WHITE, Color.CYAN});
+        gradientScreen.setShape(GradientDrawable.RECTANGLE);
+        gradientScreen.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        gradientBoard = new GradientDrawable(GradientDrawable.Orientation.BL_TR, new int[]{Color.WHITE, Color.CYAN});
+        gradientBoard.setShape(GradientDrawable.RECTANGLE);
+        gradientBoard.setGradientType(GradientDrawable.RADIAL_GRADIENT);
 
         state = GameState.INIT;
         loading = 0;
@@ -94,14 +97,14 @@ public class MainGamePanel extends SurfaceView implements
             bx = 0;
             by = (sh - bw) / 2;
             labelRect = new Rect(0, 0, sw, by);
-            menuRect = new Rect(0, by + bw, sw, sh);
+            menuRect = new Rect(sw / 50, by + bw + sh / 50, sw - sw / 50, sh - sh / 50);
             titleRect = new Rect(0, (int) (sh * .25f - sw / 6) / 2, sw, (int) (sh * .25f + sw / 6) / 2);
         } else {
             bw = sh;
             bx = sw - bw;
             by = 0;
             labelRect = new Rect(0, 0, bx, sh / 2);
-            menuRect = new Rect(0, sh / 2, bx, sh);
+            menuRect = new Rect(sw / 50, sh / 2 + sh / 50, bx - sw / 50, sh - sh / 50);
             titleRect = new Rect((int) (sw - sh * .25f * 6) / 2, 0, (int) (sw + sh * .25f * 6) / 2, (int) (sh * .25f));
         }
         bs = bw / 3;
@@ -111,24 +114,29 @@ public class MainGamePanel extends SurfaceView implements
             bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought160);
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash160);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title160);
+            button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button160);
         } else {
             bitmapCross = BitmapFactory.decodeResource(getResources(), R.drawable.cross320);
             bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought320);
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash320);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title320);
+            button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button320);
         }
-        button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button);
         splash = new Animation(bitmapSplash, (sw - bs) / 2, (sh - bs) / 2, bs, bs, 30, 30, false);
 
         boardRect = new Rect(bx, by, bx + bw, by + bw);
         screenRect = new Rect(0, 0, sw, sh);
         paintGrid.setStrokeWidth(bw / 50);
-        fontFactor = Math.min(sw, sh) / 480;
+        fontFactor = Math.min(sw, sh) / 480f;
         paintText.setTextSize(60 * fontFactor);
         paintAuthor.setTextSize(20 * fontFactor);
         paintFPS.setTextSize(16 * fontFactor);
         textd = -(int) ((paintText.descent() + paintText.ascent()) / 2);
-        gradient.setGradientRadius(bw);
+        gradientScreen.setGradientRadius(bw);
+        gradientScreen.setBounds(screenRect);
+        gradientBoard.setGradientRadius(bw);
+        gradientBoard.setBounds(screenRect);
+        gradientBoard.setGradientCenter((bx + bw / 2f) / sw, (by + bw / 2f) / sh);
         isReady = true;
         startPlaying();
     }
@@ -253,13 +261,11 @@ public class MainGamePanel extends SurfaceView implements
     public void render(Canvas canvas) {
         switch (state) {
             case INIT:
-                gradient.setBounds(screenRect);
-                gradient.draw(canvas);
+                gradientScreen.draw(canvas);
                 splash.draw(canvas, 0, 0);
                 break;
             case MENU:
-                gradient.setBounds(screenRect);
-                gradient.draw(canvas);
+                gradientScreen.draw(canvas);
                 canvas.drawBitmap(bitmapTitle, null, titleRect, null);
                 button.setBounds(startRect);
                 button.draw(canvas);
@@ -272,9 +278,7 @@ public class MainGamePanel extends SurfaceView implements
                 break;
             case PLAY:
             case FINISH:
-                canvas.drawColor(Color.WHITE);
-                gradient.setBounds(boardRect);
-                gradient.draw(canvas);
+                gradientBoard.draw(canvas);
                 synchronized (animations) {
                     for (Animation animation : animations) {
                         animation.draw(canvas, bx, by);
