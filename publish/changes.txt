@@ -1,3 +1,10 @@
+VERSION 1.2
+
+* Added animated crosses and noughts
+* Updated graphics
+
+VERSION 1.1
+
 * Added tie message
 * Fixed fonts
 * Fixed player label for landscape 4:3 screen
