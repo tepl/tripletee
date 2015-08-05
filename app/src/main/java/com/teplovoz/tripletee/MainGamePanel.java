@@ -32,11 +32,11 @@ public class MainGamePanel extends SurfaceView implements
     private GameState state;
     private int[][] board = new int[3][3];
     private float loading;
-    private Paint paintText, paintGrid, paintFinish, paintAuthor, paintFPS;
+    private Paint paintText, paintGrid, paintAuthor, paintFPS;
     private Rect screenRect, boardRect, startRect, exitRect, menuRect, labelRect, titleRect;
     private Bitmap bitmapCross, bitmapNought, bitmapSplash, bitmapTitle;
     private GradientDrawable gradientScreen, gradientBoard;
-    private NinePatchDrawable button;
+    private NinePatchDrawable button, message;
     private Animation splash;
     private float fontFactor;
     private int sw, sh, bw, bx, by, bs;     // screen, board, offsets and grid step
@@ -61,8 +61,6 @@ public class MainGamePanel extends SurfaceView implements
         paintText.setTextAlign(Paint.Align.CENTER);
         paintGrid = new Paint();
         paintGrid.setColor(Color.BLACK);
-        paintFinish = new Paint();
-        paintFinish.setColor(Color.CYAN);
         paintAuthor = new Paint();
         paintAuthor.setColor(Color.BLACK);
         paintAuthor.setTextAlign(Paint.Align.CENTER);
@@ -115,12 +113,14 @@ public class MainGamePanel extends SurfaceView implements
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash160);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title160);
             button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button160);
+            message = (NinePatchDrawable) getResources().getDrawable(R.drawable.message160);
         } else {
             bitmapCross = BitmapFactory.decodeResource(getResources(), R.drawable.cross320);
             bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought320);
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash320);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title320);
             button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button320);
+            message = (NinePatchDrawable) getResources().getDrawable(R.drawable.message320);
         }
         splash = new Animation(bitmapSplash, (sw - bs) / 2, (sh - bs) / 2, bs, bs, 30, 30, false);
 
@@ -299,8 +299,9 @@ public class MainGamePanel extends SurfaceView implements
                     if (tie) label = "Tie!";
                     else label = "Player " + Integer.toString(player) + " won!";
                     int tw = (int) paintText.measureText(label);
-                    Rect finishRect = new Rect((int) ((sw - tw) / 2 - .1f * sw), (int) (sh * .4f), (int) ((sw + tw) / 2 + .1f * sw), (int) (sh * .6f));
-                    canvas.drawRect(finishRect, paintFinish);
+                    Rect finishRect = new Rect((int) ((sw - tw) / 2 - .1f * sw), sh / 2 - Math.abs(textd) * 5, (int) ((sw + tw) / 2 + .1f * sw), sh / 2 + Math.abs(textd) * 5);
+                    message.setBounds(finishRect);
+                    message.draw(canvas);
                     canvas.drawText(label, sw / 2, sh / 2 + textd, paintText);
                 }
                 break;
