@@ -112,8 +112,13 @@ public class MainGamePanel extends SurfaceView implements
             bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought160);
             bitmapSplash = BitmapFactory.decodeResource(getResources(), R.drawable.splash160);
             bitmapTitle = BitmapFactory.decodeResource(getResources(), R.drawable.title160);
-            button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button160);
-            message = (NinePatchDrawable) getResources().getDrawable(R.drawable.message160);
+            if (bs <= 80) {
+                button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button80);
+                message = (NinePatchDrawable) getResources().getDrawable(R.drawable.message80);
+            } else {
+                button = (NinePatchDrawable) getResources().getDrawable(R.drawable.button160);
+                message = (NinePatchDrawable) getResources().getDrawable(R.drawable.message160);
+            }
         } else {
             bitmapCross = BitmapFactory.decodeResource(getResources(), R.drawable.cross320);
             bitmapNought = BitmapFactory.decodeResource(getResources(), R.drawable.nought320);
@@ -290,8 +295,10 @@ public class MainGamePanel extends SurfaceView implements
                 canvas.drawLine(bx, by + 2 * bs, bx + bw, by + 2 * bs, paintGrid);
                 button.setBounds(menuRect);
                 button.draw(canvas);
-                canvas.drawText("Menu", menuRect.centerX(), menuRect.centerY() + textd, paintText);
-                String label = "Player " + Integer.toString(player);
+                String label = "Menu";
+                if (bx > 0 && paintText.measureText(label) > menuRect.width()) label = "M";
+                canvas.drawText(label, menuRect.centerX(), menuRect.centerY() + textd, paintText);
+                label = "Player " + Integer.toString(player);
                 if (bx > 0 && paintText.measureText(label) > bx)
                     label = "Plr " + Integer.toString(player);
                 canvas.drawText(label, labelRect.centerX(), labelRect.centerY() + textd, paintText);
